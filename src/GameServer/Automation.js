@@ -99,6 +99,13 @@ class Automation extends SelectedModel {
         Timer.start(this.timer.action, () => {
             src.state.setTowards(false);
             this.clearDestId();
+            if (session && (session.constructor.name === 'BotSession' || (session.accountId && session.accountId.startsWith('bot_')))) {
+                src.setLocXYZ({
+                    locX: dst.fetchLocX(),
+                    locY: dst.fetchLocY(),
+                    locZ: dst.fetchLocZ()
+                });
+            }
             callback();
 
         }, ticks);
@@ -136,6 +143,9 @@ class Automation extends SelectedModel {
         // Arrived
         Timer.start(this.timer.pickup, () => {
             src.state.setTowards(false);
+            if (session && (session.constructor.name === 'BotSession' || (session.accountId && session.accountId.startsWith('bot_')))) {
+                src.setLocXYZ(to);
+            }
             callback();
 
         }, ticks);

@@ -1,6 +1,7 @@
 const ServerResponse = invoke('GameServer/Network/Response');
 const Item           = invoke('GameServer/Item/Item');
 const DataCache      = invoke('GameServer/DataCache');
+const Database       = invoke('Database');
 
 function npcTalkResponse(session, data) {
     let parts = data.link.split(' ') ?? [];
@@ -57,6 +58,31 @@ function npcTalkResponse(session, data) {
             }
             break;
 
+        case 'buy-shop':
+            {
+                let list = [];
+                let itemIds = [];
+
+                if (parts[1] === 'grocer') {
+                    itemIds = [1835, 1830, 1061, 1062, 1863];
+                } else if (parts[1] === 'weapons') {
+                    itemIds = [1, 2, 3, 4, 5, 14, 15, 21, 22, 23, 28, 29, 30, 34, 35, 36, 37, 38, 39, 24, 25, 26, 27, 31, 32];
+                } else {
+                    itemIds = [1835, 1061, 1830];
+                }
+
+                itemIds.forEach((selfId) => {
+                    DataCache.fetchItemFromSelfId(selfId, (item) => {
+                        list.push(new Item(this.items.nextId++, utils.crushOb(item)));
+                    });
+                });
+
+                session.dataSendToMe(
+                    ServerResponse.purchaseList(list, session.actor.backpack.fetchTotalAdena())
+                );
+            }
+            break;
+
         case 'admin-shop':
             {
                 let list = [];
@@ -71,6 +97,141 @@ function npcTalkResponse(session, data) {
                 session.dataSendToMe(
                     ServerResponse.purchaseList(list, session.actor.backpack.fetchTotalAdena())
                 );
+            }
+            break;
+
+        case 'sell-junk':
+            {
+                const backpack = session.actor.backpack;
+                const items = backpack.items;
+
+                const sellableItems = items.filter(item => !item.fetchEquipped() && item.fetchSelfId() !== 57);
+
+                if (sellableItems.length === 0) {
+                    session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: "You have no unequipped items to sell." }));
+                    return;
+                }
+
+                let totalAdenaPayout = 0;
+                let soldDetails = [];
+
+                sellableItems.forEach((item) => {
+                    const price = item.fetchPrice();
+                    const sellPrice = Math.max(1, Math.floor(price * 0.5));
+                    const payout = sellPrice * item.fetchAmount();
+                    
+                    totalAdenaPayout += payout;
+                    soldDetails.push(`${item.fetchAmount()}x ${item.fetchName()} (+${payout} Adena)`);
+
+                    Database.deleteItem(session.actor.fetchId(), item.fetchId());
+                });
+
+                backpack.items = backpack.items.filter(item => item.fetchEquipped() || item.fetchSelfId() === 57);
+
+                backpack.stackableExists(57).then((adenaItem) => {
+                    const total = adenaItem.fetchAmount() + totalAdenaPayout;
+                    Database.updateItemAmount(session.actor.fetchId(), adenaItem.fetchId(), total).then(() => {
+                        adenaItem.setAmount(total);
+                        session.dataSendToMe(ServerResponse.itemsList(backpack.fetchItems()));
+                        session.dataSendToMe(ServerResponse.userInfo(session.actor));
+                        
+                        session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Sold: ${soldDetails.join(', ')}` }));
+                        session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Successfully sold ${sellableItems.length} items. Gained +${totalAdenaPayout} Adena!` }));
+                    });
+                }).catch(() => {
+                    Database.setItem(session.actor.fetchId(), {
+                        selfId: 57,
+                        name: "Adena",
+                        amount: totalAdenaPayout,
+                        equipped: false,
+                        slot: 0
+                    }).then((packet) => {
+                        backpack.insertItem(Number(packet.insertId), 57, { amount: totalAdenaPayout });
+                        session.dataSendToMe(ServerResponse.itemsList(backpack.fetchItems()));
+                        session.dataSendToMe(ServerResponse.userInfo(session.actor));
+                        
+                        session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Sold: ${soldDetails.join(', ')}` }));
+                        session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Successfully sold ${sellableItems.length} items. Gained +${totalAdenaPayout} Adena!` }));
+                    });
+                });
+            }
+            break;
+
+        case 'admin-give-adena':
+            {
+                const targetName = parts[1];
+                const amount = Number(parts[2]);
+                const World = invoke('GameServer/World/World');
+
+                if (!targetName || isNaN(amount)) {
+                    utils.infoWarn('GameServer', 'Invalid give-adena command parameters');
+                    return;
+                }
+
+                // 1. Search if target character is online in the World
+                const targetSession = World.user.sessions.find(ob => ob.actor && ob.actor.fetchName().toLowerCase() === targetName.toLowerCase());
+                if (targetSession && targetSession.actor) {
+                    const backpack = targetSession.actor.backpack;
+                    backpack.stackableExists(57).then((item) => {
+                        const total = item.fetchAmount() + amount;
+                        Database.updateItemAmount(targetSession.actor.fetchId(), item.fetchId(), total).then(() => {
+                            backpack.updateAmount(item.fetchId(), total);
+                            targetSession.dataSendToMe(ServerResponse.userInfo(targetSession.actor));
+                            targetSession.dataSendToMe(ServerResponse.itemsList(backpack.fetchItems()));
+                            
+                            targetSession.dataSendToMe(ServerResponse.speak(targetSession.actor, { kind: 0, text: `Received ${amount} Adena from Admin.` }));
+                            if (session !== targetSession) {
+                                session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Successfully gave ${amount} Adena to ${targetSession.actor.fetchName()}.` }));
+                            }
+                        });
+                    }).catch(() => {
+                        Database.setItem(targetSession.actor.fetchId(), {
+                            selfId: 57,
+                            name: "Adena",
+                            amount: amount,
+                            equipped: false,
+                            slot: 0
+                        }).then((packet) => {
+                            backpack.insertItem(Number(packet.insertId), 57, { amount: amount });
+                            targetSession.dataSendToMe(ServerResponse.userInfo(targetSession.actor));
+                            targetSession.dataSendToMe(ServerResponse.itemsList(backpack.fetchItems()));
+                            
+                            targetSession.dataSendToMe(ServerResponse.speak(targetSession.actor, { kind: 0, text: `Received ${amount} Adena from Admin.` }));
+                            if (session !== targetSession) {
+                                session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Successfully gave ${amount} Adena to ${targetSession.actor.fetchName()}.` }));
+                            }
+                        });
+                    });
+                } else {
+                    // Offline or doesn't exist
+                    Database.fetchCharacterName(targetName).then((rows) => {
+                        if (rows && rows[0]) {
+                            const charId = rows[0].id;
+                            const charRealName = rows[0].name;
+                            Database.fetchItems(charId).then((items) => {
+                                const adenaItem = items.find(ob => ob.selfId === 57);
+                                if (adenaItem) {
+                                    const total = adenaItem.amount + amount;
+                                    Database.updateItemAmount(charId, adenaItem.id, total).then(() => {
+                                        session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Successfully gave ${amount} Adena to offline character ${charRealName}.` }));
+                                    });
+                                } else {
+                                    Database.setItem(charId, {
+                                        selfId: 57,
+                                        name: "Adena",
+                                        amount: amount,
+                                        equipped: false,
+                                        slot: 0
+                                    }).then(() => {
+                                        session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Successfully gave ${amount} Adena to offline character ${charRealName}.` }));
+                                    });
+                                }
+                            });
+                        } else {
+                            session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: `Character with name "${targetName}" does not exist.` }));
+                        }
+                    });
+                }
             }
             break;
 

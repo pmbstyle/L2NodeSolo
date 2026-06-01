@@ -43,5 +43,7 @@ module.exports = {
                 sunset: require('./Sunset'),
     teleportToLocation: require('./TeleportToLocation'),
               userInfo: require('./UserInfo'),
-            walkAndRun: require('./WalkAndRun')
+            walkAndRun: require('./WalkAndRun'),
+   partySmallWindowAll: require('./PartySmallWindowAll'),
+partySmallWindowDelete: require('./PartySmallWindowDelete')
 };

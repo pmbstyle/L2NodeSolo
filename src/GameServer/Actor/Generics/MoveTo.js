@@ -13,6 +13,10 @@ function moveTo(session, actor, coords) {
     // Abort scheduled movement, user redirected the actor
     actor.automation.abortAll(actor);
     session.dataSendToMeAndOthers(ServerResponse.moveToLocation(actor.fetchId(), coords), actor);
+
+    if (session && (session.constructor.name === 'BotSession' || (session.accountId && session.accountId.startsWith('bot_')))) {
+        actor.setLocXYZ(coords.to);
+    }
 }
 
 module.exports = moveTo;

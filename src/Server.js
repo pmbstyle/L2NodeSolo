@@ -17,6 +17,7 @@ class Server {
         const session = this.callback(socket);
         socket.on( 'data', session.dataReceive.bind(session));
         socket.on('error', session.error.bind(session));
+        socket.on('close', () => session.error());
     }
 }
 

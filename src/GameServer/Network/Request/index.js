@@ -33,5 +33,7 @@ module.exports = {
           unequipItem: require('./UnequipItem'),
               useItem: require('./UseItem'),
           userCommand: require('./UserCommand'),
-     validatePosition: require('./ValidatePosition')
+     validatePosition: require('./ValidatePosition'),
+      oustPartyMember: require('./OustPartyMember'),
+         dismissParty: require('./DismissParty')
 };

@@ -7,6 +7,7 @@ const World       = invoke('GameServer/World/World');
 const DataCache   = invoke('GameServer/DataCache');
 const Database    = invoke('Database');
 const Server      = invoke('Server');
+const BotManager  = invoke('GameServer/Bot/BotManager');
 
 console.info('\n\
     + ================================== \n\
@@ -30,4 +31,6 @@ Database.init(() => {
     new Server('GameServer', options.default.GameServer, (socket) => {
         return new GameSession(socket);
     });
+
+    BotManager.init();
 });

@@ -10,8 +10,8 @@ function authLogin(session, buffer) {
         .readB(16); // Password
 
     consume(session, {
-        username: utils.stripNull(packet.data[0]),
-        password: utils.stripNull(packet.data[1]),
+        username: utils.stripNull(packet.data[0]).trim(),
+        password: utils.stripNull(packet.data[1]).trim(),
     });
 }
 

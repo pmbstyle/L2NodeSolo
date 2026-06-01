@@ -52,9 +52,17 @@ class Session {
         return Buffer.concat([header, data]);
     }
 
-    error() {
-        utils.infoWarn('GameServer', 'exception');
-        this.actor?.destructor();
+    error(err) {
+        if (err) {
+            utils.infoWarn('GameServer', 'exception: ' + (err.stack || err.message || err));
+        } else {
+            utils.infoWarn('GameServer', 'connection closed');
+        }
+        if (this.actor) {
+            this.actor.destructor();
+            this.actor = null;
+        }
+        World.removeUser(this);
     }
 }
 

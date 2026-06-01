@@ -4,7 +4,7 @@ const ClientRequest = invoke('GameServer/Network/Request');
 const Opcodes = {
     table: (() => {
         const table = utils.tupleAlloc(0xff, (_, packet) => {
-            utils.infoFail('GameServer', 'unknown Opcode 0x%s', utils.toHex(packet[0]));
+            utils.infoWarn('GameServer', 'unknown Opcode 0x%s', utils.toHex(packet[0]));
         });
 
         table[0x00] = ClientRequest.protocolVersion;
@@ -27,6 +27,8 @@ const Opcodes = {
         table[0x21] = ClientRequest.htmlLink;
         table[0x29] = ClientRequest.askForTeamUp;
         table[0x2a] = ClientRequest.answerForTeamUp;
+        table[0x2b] = ClientRequest.oustPartyMember;
+        table[0x2c] = ClientRequest.dismissParty;
         table[0x2f] = ClientRequest.skillUse;
         table[0x30] = ClientRequest.appeared;
         table[0x33] = ClientRequest.addShortcut;
@@ -47,6 +49,8 @@ const Opcodes = {
         table[0x9d] = () => {}; // Skill Cool Time, not needed?
         table[0xb9] = () => {}; // Recommend button
         table[0xc1] = () => {}; // Macro
+        table[0x4a] = () => {}; // StartRotating
+        table[0x4b] = () => {}; // FinishRotating
 
         return table;
     })()

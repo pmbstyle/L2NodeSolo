@@ -20,9 +20,33 @@ function consume(session, data) {
             invoke(path.actor).adminPanel(session, session.actor);
             return;
         }
+        if (data.text === '.sell') {
+            invoke(path.world + 'NpcTalkResponse')(session, { link: 'sell-junk' });
+            return;
+        }
+        if (data.text === '.leave') {
+            const World = invoke('GameServer/World/World');
+            World.dismissParty(session, session.actor);
+            return;
+        }
+        if (data.text.startsWith('.kick ')) {
+            const name = data.text.substring(6).trim();
+            const World = invoke('GameServer/World/World');
+            World.oustPartyMember(session, session.actor, { name: name });
+            return;
+        }
     }
 
     session.dataSendToMeAndOthers(ServerResponse.speak(session.actor, data), session.actor);
+
+    try {
+        const BotManager = invoke('GameServer/Bot/BotManager');
+        if (BotManager && typeof BotManager.handlePlayerSpeak === 'function') {
+            BotManager.handlePlayerSpeak(session, data);
+        }
+    } catch (err) {
+        console.error("BotManager speak hook error:", err);
+    }
 }
 
 module.exports = speak;

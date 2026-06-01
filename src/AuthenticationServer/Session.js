@@ -36,8 +36,8 @@ class Session {
         this.socket.write(Buffer.concat([header, encipheredPacket]));
     }
 
-    error() {
-        utils.infoWarn('AuthServer', 'exception');
+    error(err) {
+        utils.infoWarn('AuthServer', 'exception: ' + (err ? err.stack || err.message || err : 'unknown socket error'));
     }
 }
 
