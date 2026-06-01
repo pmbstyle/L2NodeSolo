@@ -27,7 +27,7 @@ function charInfo(actor) {
         .writeD(0x00)  // ?
         .writeD(actor.fetchCollectiveCastSpd())
         .writeD(actor.fetchCollectiveAtkSpd())
-        .writeD(0x00)  // Purple = 0x01
+        .writeD(actor.fetchPvpFlag())  // Purple = 0x01
         .writeD(actor.fetchKarma())
         .writeD(actor.fetchCollectiveRunSpd())
         .writeD(actor.fetchCollectiveWalkSpd())

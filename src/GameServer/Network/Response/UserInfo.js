@@ -51,7 +51,7 @@ function userInfo(actor) {
         .writeD(actor.fetchCollectiveCastSpd())
         .writeD(actor.fetchCollectiveAtkSpd())
         .writeD(actor.fetchCollectiveMDef())
-        .writeD(0x00)  // Purple = 0x01
+        .writeD(actor.fetchPvpFlag())  // Purple = 0x01
         .writeD(actor.fetchKarma())
         .writeD(actor.fetchCollectiveRunSpd())
         .writeD(actor.fetchCollectiveWalkSpd())

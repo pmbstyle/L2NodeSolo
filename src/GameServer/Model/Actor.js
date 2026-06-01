@@ -12,6 +12,18 @@ class ActorModel extends CreatureModel {
         this.model.sp = data;
     }
 
+    setPvp(data) {
+        this.model.pvp = data;
+    }
+
+    setPk(data) {
+        this.model.pk = data;
+    }
+
+    setKarma(data) {
+        this.model.karma = data;
+    }
+
     setExpSp(exp, sp) {
         this.setExp(exp); this.setSp(sp);
     }
@@ -40,7 +52,15 @@ class ActorModel extends CreatureModel {
         this.model.isOnline = data;
     }
 
+    setPvpFlag(data) {
+        this.model.pvpFlag = data;
+    }
+
     // Get
+
+    fetchPvpFlag() {
+        return this.model.pvpFlag || 0;
+    }
 
     fetchUsername() {
         return this.model.username;

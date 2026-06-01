@@ -231,6 +231,16 @@ const Database = {
                 maxMp: maxMp,
             }, 'id = ? LIMIT 1', id)
         );
+    },
+
+    updateCharacterPvpPkKarma(id, pvp, pk, karma) {
+        return Database.execute(
+            builder.update('characters', {
+                  pvp: pvp,
+                   pk: pk,
+                karma: karma
+            }, 'id = ? LIMIT 1', id)
+        );
     }
 };
 

@@ -11,6 +11,35 @@ function receivedHit(session, actor, hit) {
 
     // Bummer
     if (actor.fetchHp() <= 0) {
+        if (session.actor && session.actor !== actor) {
+            const attacker = session.actor;
+            const victim = actor;
+            const Database = invoke('Database');
+            const ServerResponse = invoke('GameServer/Network/Response');
+
+            if (victim.fetchPvpFlag() === 1) {
+                // Legitimate PvP kill
+                attacker.setPvp(attacker.fetchPvp() + 1);
+                session.dataSendToMe(ServerResponse.userInfo(attacker));
+                session.dataSendToOthers(ServerResponse.charInfo(attacker), attacker);
+                Database.updateCharacterPvpPkKarma(attacker.fetchId(), attacker.fetchPvp(), attacker.fetchPk(), attacker.fetchKarma());
+            } else {
+                // PK kill
+                attacker.setPk(attacker.fetchPk() + 1);
+                attacker.setKarma(attacker.fetchKarma() + 360);
+                session.dataSendToMe(ServerResponse.userInfo(attacker));
+                session.dataSendToOthers(ServerResponse.charInfo(attacker), attacker);
+                Database.updateCharacterPvpPkKarma(attacker.fetchId(), attacker.fetchPvp(), attacker.fetchPk(), attacker.fetchKarma());
+            }
+
+            // Clear victim's flag
+            victim.setPvpFlag(0);
+            if (victim.session && victim.session.pvpFlagTimer) {
+                clearTimeout(victim.session.pvpFlagTimer);
+                victim.session.pvpFlagTimer = undefined;
+            }
+        }
+
         Generics.die(session, actor);
         return;
     }

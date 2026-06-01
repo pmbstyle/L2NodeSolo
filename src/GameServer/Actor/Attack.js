@@ -141,6 +141,21 @@ class Attack {
         ConsoleText.transmit(session, ConsoleText.caption.actorHit, [{ kind: ConsoleText.kind.number, value: hit }]);
 
         if (creature.fetchId() >= 2000000) {
+            // Flag the attacker when hitting another player/bot
+            actor.setPvpFlag(1);
+            session.dataSendToMe(ServerResponse.userInfo(actor));
+            session.dataSendToOthers(ServerResponse.charInfo(actor), actor);
+
+            if (session.pvpFlagTimer) {
+                clearTimeout(session.pvpFlagTimer);
+            }
+            session.pvpFlagTimer = setTimeout(() => {
+                actor.setPvpFlag(0);
+                session.dataSendToMe(ServerResponse.userInfo(actor));
+                session.dataSendToOthers(ServerResponse.charInfo(actor), actor);
+                session.pvpFlagTimer = undefined;
+            }, 15000); // 15 seconds flag duration
+
             invoke(path.actor).receivedHit(session, creature, hit);
         }
         else {
