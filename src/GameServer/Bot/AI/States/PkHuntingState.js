@@ -28,6 +28,7 @@ module.exports = {
         if (threatCount >= 2 || highestThreat) {
             if (session.plan !== 'pk_fleeing') {
                 session.plan = 'pk_fleeing';
+                session.fleeStart = Date.now();
                 session.currentTargetId = undefined;
 
                 const panicPhrases = [

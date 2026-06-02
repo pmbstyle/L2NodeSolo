@@ -1,15 +1,25 @@
 const World = invoke('GameServer/World/World');
 
 function skillExec(session, actor, data) {
+    const skill = actor.skillset.fetchSkill(data.selfId);
+    if (!skill) return;
+
     World.fetchNpc(data.id).then((npc) => {
-        const skill = actor.skillset.fetchSkill(data.selfId);
         actor.automation.scheduleAction(session, actor, npc, skill.fetchDistance(), () => {
-            if (npc.fetchAttackable() || data.ctrl) { // TODO: Else, find which `response` fails the attack
+            if (npc.fetchAttackable() || data.ctrl) {
                 actor.attack.remoteHit(session, npc, skill);
             }
         });
-    }).catch((err) => {
-        utils.infoWarn('GameServer', 'Skill -> ' + err);
+    }).catch(() => {
+        World.fetchUser(data.id).then((user) => {
+            actor.automation.scheduleAction(session, actor, user, skill.fetchDistance(), () => {
+                if (data.ctrl) {
+                    actor.attack.remoteHit(session, user, skill);
+                }
+            });
+        }).catch((err) => {
+            utils.infoWarn('GameServer', 'Skill -> ' + err);
+        });
     });
 }
 

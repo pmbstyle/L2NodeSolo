@@ -24,17 +24,29 @@ module.exports = {
         const playerTargetId = player.fetchDestId();
         if (playerTargetId) {
             // If player is in combat, assist them!
-            World.fetchNpc(playerTargetId).then((npc) => {
-                if (npc.fetchAttackable() && !npc.isDead()) {
+            World.fetchUser(playerTargetId).then((user) => {
+                if (!user.state.fetchDead()) {
                     if (session.currentTargetId !== playerTargetId) {
                         session.currentTargetId = playerTargetId;
                         bot.select({ id: playerTargetId });
                         if (Math.random() < 0.20) {
-                            BotAI.say(session, "Assisting you! Smashing that " + npc.fetchName() + "!");
+                            BotAI.say(session, "Assisting you in PvP! Attacking " + user.fetchName() + "!");
                         }
                     }
                 }
-            }).catch(() => {});
+            }).catch(() => {
+                World.fetchNpc(playerTargetId).then((npc) => {
+                    if (npc.fetchAttackable() && !npc.isDead()) {
+                        if (session.currentTargetId !== playerTargetId) {
+                            session.currentTargetId = playerTargetId;
+                            bot.select({ id: playerTargetId });
+                            if (Math.random() < 0.20) {
+                                BotAI.say(session, "Assisting you! Smashing that " + npc.fetchName() + "!");
+                            }
+                        }
+                    }
+                }).catch(() => {});
+            });
         }
 
         // Move closer to player if not in combat and far

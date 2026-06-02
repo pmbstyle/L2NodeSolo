@@ -117,9 +117,21 @@ const BotManager = {
             if (!character) return;
 
             Shared.fetchClassInformation(character.classId).then((classInfo) => {
+                // Randomize initial location slightly to scatter them across the starting area
+                if (character.name !== "Bot_Gimli" && character.name !== "Bot_Legolas" && character.name !== "Bot_Gandalf" && character.name !== "Aragorn") {
+                    character.locX += (Math.random() - 0.5) * 1600;
+                    character.locY += (Math.random() - 0.5) * 1600;
+                }
+
                 session.setActor({
                     ...character, ...utils.crushOb(classInfo)
                 });
+                
+                session.initialSpawnCoord = {
+                    locX: character.locX,
+                    locY: character.locY,
+                    locZ: character.locZ
+                };
 
                 // Spawn the bot actor in the World
                 World.insertUser(session);

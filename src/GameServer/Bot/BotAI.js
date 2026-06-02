@@ -109,12 +109,30 @@ const BotAI = {
                 bot.fillupVitals(); // Restore full HP/MP
                 session.deathTimerStart = undefined;
                 session.currentTargetId = undefined;
-                session.plan = 'hunting'; // Reset plan
                 
-                // Teleport back to spawn coordinate to prevent getting stuck in deep water
-                const spawns = newbieSpawnCoords(bot.fetchClassId());
-                const coords = spawns[Math.floor(Math.random() * spawns.length)];
-                Generics.teleportTo(session, bot, coords);
+                let spawnTarget;
+                if (bot.fetchKarma() > 0 || bot.fetchName() === "Aragorn") {
+                    session.plan = 'pk_hunting';
+                    const BotManager = invoke('GameServer/Bot/BotManager');
+                    spawnTarget = BotManager.findHighDensityCoord();
+                    spawnTarget.locX += (Math.random() - 0.5) * 800;
+                    spawnTarget.locY += (Math.random() - 0.5) * 800;
+                } else {
+                    session.plan = 'hunting'; // Reset plan
+                    
+                    // Teleport back to spawn coordinate to prevent getting stuck in deep water
+                    if (!session.initialSpawnCoord) {
+                        session.initialSpawnCoord = { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() };
+                    }
+                    
+                    spawnTarget = {
+                        locX: session.initialSpawnCoord.locX + (Math.random() - 0.5) * 1000,
+                        locY: session.initialSpawnCoord.locY + (Math.random() - 0.5) * 1000,
+                        locZ: session.initialSpawnCoord.locZ
+                    };
+                }
+                
+                Generics.teleportTo(session, bot, spawnTarget);
                 
                 this.say(session, getRandomPhrase('revived'));
             }
@@ -164,7 +182,7 @@ const BotAI = {
                 bot.skillset.skills.push(skill);
             }
             if (bot.fetchMp() >= skill.fetchConsumedMp()) {
-                Generics.skillExec(session, bot, { id: npc.fetchId(), selfId: 1177 });
+                Generics.skillExec(session, bot, { id: npc.fetchId(), selfId: 1177, ctrl: true });
                 return;
             }
         }
@@ -187,12 +205,12 @@ const BotAI = {
                 bot.skillset.skills.push(skill);
             }
             if (bot.fetchMp() >= skill.fetchConsumedMp()) {
-                Generics.skillExec(session, bot, { id: npc.fetchId(), selfId: 56 });
+                Generics.skillExec(session, bot, { id: npc.fetchId(), selfId: 56, ctrl: true });
                 return;
             }
         }
 
-        Generics.attackExec(session, bot, { id: npc.fetchId() });
+        Generics.attackExec(session, bot, { id: npc.fetchId(), ctrl: true });
     },
 
     say(session, text) {

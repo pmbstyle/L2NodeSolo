@@ -79,12 +79,12 @@ function setCollectiveTotalCastSpd(actor) {
 }
 
 function setCollectiveTotalWalkSpd(actor) {
-    const base = Formulas.calcSpeed(actor.fetchDex());
+    const base = Formulas.calcSpeed(actor.fetchDex(), actor.fetchWalkSpd());
     actor.setCollectiveWalkSpd(base);
 }
 
 function setCollectiveTotalRunSpd(actor) {
-    let base = Formulas.calcSpeed(actor.fetchDex());
+    let base = Formulas.calcSpeed(actor.fetchDex(), actor.fetchRunSpd());
     if (actor.activeBuffs && actor.activeBuffs.windWalk && Date.now() < actor.activeBuffs.windWalk) {
         base += 33; // +33 Run Speed
     }

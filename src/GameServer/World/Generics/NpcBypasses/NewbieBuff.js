@@ -14,23 +14,29 @@ module.exports = function(session, parts) {
     }
 
     const buffType = parts[1];
+    console.log("NewbieBuff.js executed. actor:", actor.fetchName(), "level:", actor.fetchLevel(), "buffType:", buffType);
 
     if (buffType === 'windwalk') {
         actor.activeBuffs.windWalk = Date.now() + 20 * 60 * 1000;
+        console.log("Run speed before calculateStats:", actor.fetchCollectiveRunSpd());
         invoke(path.actor).calculateStats(session, actor);
+        console.log("Run speed after calculateStats:", actor.fetchCollectiveRunSpd());
         session.dataSendToMe(ServerResponse.userInfo(actor));
+        session.dataSendToMe(ServerResponse.abnormalStatusUpdate.fromActor(actor));
         session.dataSendToMe(ServerResponse.speak(actor, { kind: 0, text: "Newbie Guide: Bestowed Wind Walk! May the wind guide your steps." }));
     }
     else if (buffType === 'shield') {
         actor.activeBuffs.shield = Date.now() + 20 * 60 * 1000;
         invoke(path.actor).calculateStats(session, actor);
         session.dataSendToMe(ServerResponse.userInfo(actor));
+        session.dataSendToMe(ServerResponse.abnormalStatusUpdate.fromActor(actor));
         session.dataSendToMe(ServerResponse.speak(actor, { kind: 0, text: "Newbie Guide: Bestowed Shield! May your defenses be unbreakable." }));
     }
     else if (buffType === 'haste') {
         actor.activeBuffs.haste = Date.now() + 20 * 60 * 1000;
         invoke(path.actor).calculateStats(session, actor);
         session.dataSendToMe(ServerResponse.userInfo(actor));
+        session.dataSendToMe(ServerResponse.abnormalStatusUpdate.fromActor(actor));
         session.dataSendToMe(ServerResponse.speak(actor, { kind: 0, text: "Newbie Guide: Bestowed Haste! Strike with the speed of lightning." }));
     }
     else if (buffType === 'heal') {

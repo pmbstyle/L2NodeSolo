@@ -179,7 +179,7 @@ class CreatureModel extends SelectedModel {
     }
 
     fetchCollectivePDef() {
-        return this.model.collectivePDef ?? this.fetchPAtk();
+        return this.model.collectivePDef ?? this.fetchPDef();
     }
 
     fetchMDef() {
@@ -211,7 +211,7 @@ class CreatureModel extends SelectedModel {
     }
 
     fetchCollectiveWalkSpd() {
-        return this.model.collectiveWalkSpeed ?? this.fetchWalkSpd();
+        return this.model.collectiveWalkSpd ?? this.model.collectiveWalkSpeed ?? this.fetchWalkSpd();
     }
 
     fetchRunSpd() {
@@ -219,7 +219,7 @@ class CreatureModel extends SelectedModel {
     }
 
     fetchCollectiveRunSpd() {
-        return this.model.collectiveRunSpeed ?? this.fetchRunSpd();
+        return this.model.collectiveRunSpd ?? this.model.collectiveRunSpeed ?? this.fetchRunSpd();
     }
 
     fetchRadius() {

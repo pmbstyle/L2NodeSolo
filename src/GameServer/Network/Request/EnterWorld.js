@@ -12,6 +12,7 @@ function enterWorld(session, buffer) {
     session.actor.enterWorld();
     session.dataSendToMe(ServerResponse.sunrise()); // TODO: Server timer
     session.dataSendToMe(ServerResponse.userInfo(session.actor));
+    session.dataSendToMe(ServerResponse.abnormalStatusUpdate.fromActor(session.actor));
     session.dataSendToOthers(ServerResponse.charInfo(session.actor), session.actor);
 }
 

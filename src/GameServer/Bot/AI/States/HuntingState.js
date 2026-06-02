@@ -57,10 +57,12 @@ module.exports = {
                     }
                     BotAI.executePvPCombat(session, bot, spottedPk, Generics);
                 }
+                return; // Skip rest of AI tick while fighting back PK!
             } else {
                 // Flee in panic!
                 if (session.plan !== 'fleeing') {
                     session.plan = 'fleeing';
+                    session.fleeStart = Date.now();
                     session.currentTargetId = undefined;
                     
                     const alarmPhrases = [
@@ -124,22 +126,34 @@ module.exports = {
 
         // 5. Hunt/Attack Combat execution
         if (session.currentTargetId) {
-            World.fetchNpc(session.currentTargetId).then((npc) => {
-                if (npc.isDead()) {
-                    if (Math.random() < 0.20) {
-                        BotAI.say(session, BotAI.getRandomPhrase('victory'));
-                    }
-                    session.currentTargetId = undefined;
-                    bot.unselect();
-                } else {
+            World.fetchUser(session.currentTargetId).then((targetActor) => {
+                if (targetActor && targetActor.fetchIsOnline() && !targetActor.state.fetchDead()) {
                     if (bot.state.fetchTowards() || bot.state.fetchHits() || bot.state.fetchCasts()) {
                         return;
                     }
-                    BotAI.executeCombat(session, bot, npc, Generics);
+                    BotAI.executePvPCombat(session, bot, targetActor, Generics);
+                } else {
+                    session.currentTargetId = undefined;
+                    bot.unselect();
                 }
             }).catch(() => {
-                session.currentTargetId = undefined;
-                bot.unselect();
+                World.fetchNpc(session.currentTargetId).then((npc) => {
+                    if (npc.isDead()) {
+                        if (Math.random() < 0.20) {
+                            BotAI.say(session, BotAI.getRandomPhrase('victory'));
+                        }
+                        session.currentTargetId = undefined;
+                        bot.unselect();
+                    } else {
+                        if (bot.state.fetchTowards() || bot.state.fetchHits() || bot.state.fetchCasts()) {
+                            return;
+                        }
+                        BotAI.executeCombat(session, bot, npc, Generics);
+                    }
+                }).catch(() => {
+                    session.currentTargetId = undefined;
+                    bot.unselect();
+                });
             });
         } else {
             // Find closest monster within 2500 units
@@ -170,10 +184,12 @@ module.exports = {
             } else {
                 // Wandering to search for monsters in starting zones if none nearby
                 if (Math.random() < 0.50) {
-                    const spawns = BotAI.newbieSpawnCoords(bot.fetchClassId());
-                    const baseCoord = spawns[Math.floor(Math.random() * spawns.length)];
+                    if (!session.initialSpawnCoord) {
+                        session.initialSpawnCoord = { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() };
+                    }
+                    const baseCoord = session.initialSpawnCoord;
                     
-                    // Wander up to 2500 units away from their newbie spawn base coordinate to hunt!
+                    // Wander up to 2500 units away from their initial spawn coordinate to hunt!
                     const wanderX = baseCoord.locX + utils.oneFromSpan(-2500, 2500);
                     const wanderY = baseCoord.locY + utils.oneFromSpan(-2500, 2500);
                     
