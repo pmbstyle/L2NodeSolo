@@ -147,12 +147,68 @@ module.exports = {
             }
         }
 
+        // 3.5 Execute Tank Pulling if out of combat, following, and autoTaunt is enabled
+        if (!acted && !session.currentTargetId && !session.botStay && TANK_CLASSES.includes(classId) && session.autoTaunt !== false) {
+            const nearbyNpcs = World.fetchNpcsInRadius(player.fetchLocX(), player.fetchLocY(), 1200);
+            let targetMonster = null;
+            let closestDist = 1200;
+
+            for (const npc of nearbyNpcs) {
+                if (npc.fetchAttackable() && !npc.isDead() && npc.fetchDestId() === undefined) {
+                    const distToBot = new SpeckMath.Point3D(bot.fetchLocX(), bot.fetchLocY(), bot.fetchLocZ())
+                        .distance(new SpeckMath.Point3D(npc.fetchLocX(), npc.fetchLocY(), npc.fetchLocZ()));
+                    if (distToBot < closestDist) {
+                        closestDist = distToBot;
+                        targetMonster = npc;
+                    }
+                }
+            }
+
+            if (targetMonster) {
+                const SkillModel = invoke('GameServer/Model/Skill');
+                let skill = bot.skillset.fetchSkill(28);
+                if (!skill) {
+                    skill = new SkillModel({
+                        selfId: 28,
+                        name: "Aggression",
+                        level: 1,
+                        hp: 0,
+                        mp: 10,
+                        hitTime: 1000,
+                        reuse: 3000,
+                        power: 0,
+                        distance: 600,
+                        passive: false
+                    });
+                    bot.skillset.skills.push(skill);
+                }
+                if (bot.fetchMp() >= skill.fetchConsumedMp()) {
+                    acted = true;
+                    session.currentTargetId = targetMonster.fetchId();
+                    bot.select({ id: targetMonster.fetchId() });
+                    Generics.skillExec(session, bot, { id: targetMonster.fetchId(), selfId: 28, ctrl: true });
+                    if (Math.random() < 0.30) {
+                        BotAI.say(session, "Pulling " + targetMonster.fetchName() + " to the group!");
+                    }
+                }
+            }
+        }
+
         // 4. Execute Combat Support (DPS / Assist)
         if (!acted) {
             const playerTargetId = player.fetchDestId();
             if (playerTargetId) {
                 World.fetchUser(playerTargetId).then((user) => {
                     if (!user.state.fetchDead()) {
+                        // Stay post validation: restrict target engagement
+                        if (session.botStay && session.stayLocation) {
+                            const stayDist = new SpeckMath.Point3D(session.stayLocation.locX, session.stayLocation.locY, session.stayLocation.locZ)
+                                .distance(new SpeckMath.Point3D(user.fetchLocX(), user.fetchLocY(), user.fetchLocZ()));
+                            if (stayDist > 900) {
+                                return; // Too far from post
+                            }
+                        }
+
                         if (session.currentTargetId !== playerTargetId) {
                             session.currentTargetId = playerTargetId;
                             bot.select({ id: playerTargetId });
@@ -171,6 +227,15 @@ module.exports = {
                 }).catch(() => {
                     World.fetchNpc(playerTargetId).then((npc) => {
                         if (npc.fetchAttackable() && !npc.isDead()) {
+                            // Stay post validation: restrict target engagement
+                            if (session.botStay && session.stayLocation) {
+                                const stayDist = new SpeckMath.Point3D(session.stayLocation.locX, session.stayLocation.locY, session.stayLocation.locZ)
+                                    .distance(new SpeckMath.Point3D(npc.fetchLocX(), npc.fetchLocY(), npc.fetchLocZ()));
+                                if (stayDist > 900) {
+                                    return; // Too far from post
+                                }
+                            }
+
                             if (session.currentTargetId !== playerTargetId) {
                                 session.currentTargetId = playerTargetId;
                                 bot.select({ id: playerTargetId });
@@ -197,12 +262,23 @@ module.exports = {
             }
         }
 
-        // 5. Follow player if not currently busy/acting
-        if (!session.currentTargetId && !acted && distance > 250) {
-            bot.moveTo({
-                from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
-                to: { locX: player.fetchLocX() + utils.oneFromSpan(-60, 60), locY: player.fetchLocY() + utils.oneFromSpan(-60, 60), locZ: player.fetchLocZ() }
-            });
+        // 5. Follow player or return to stay location post
+        if (!session.currentTargetId && !acted) {
+            if (session.botStay && session.stayLocation) {
+                const stayDist = new SpeckMath.Point3D(bot.fetchLocX(), bot.fetchLocY(), bot.fetchLocZ())
+                    .distance(new SpeckMath.Point3D(session.stayLocation.locX, session.stayLocation.locY, session.stayLocation.locZ));
+                if (stayDist > 100) {
+                    bot.moveTo({
+                        from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
+                        to: { locX: session.stayLocation.locX, locY: session.stayLocation.locY, locZ: session.stayLocation.locZ }
+                    });
+                }
+            } else if (distance > 250) {
+                bot.moveTo({
+                    from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
+                    to: { locX: player.fetchLocX() + utils.oneFromSpan(-60, 60), locY: player.fetchLocY() + utils.oneFromSpan(-60, 60), locZ: player.fetchLocZ() }
+                });
+            }
         }
     }
 };

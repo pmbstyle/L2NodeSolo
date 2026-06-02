@@ -74,6 +74,10 @@ const World = {
                 // 2. Add companion to party HUD sidebar
                 session.dataSendToMe(ServerResponse.partySmallWindowAll(actor.fetchId(), 0, [user]));
 
+                // 3. Open the Companion Control Panel
+                const CompanionControl = invoke('GameServer/World/Generics/NpcBypasses/CompanionControl');
+                CompanionControl.render(session);
+
                 setTimeout(() => {
                     BotManager.botSay(targetSession, `Party system is a bit complex for my brain, but I've joined you as a companion! (Follow mode active)`);
                     targetSession.plan = 'following';

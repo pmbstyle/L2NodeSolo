@@ -35,6 +35,11 @@ function consume(session, data) {
             World.oustPartyMember(session, session.actor, { name: name });
             return;
         }
+        if (data.text === '.bot' || data.text === '.companion') {
+            const CompanionControl = invoke('GameServer/World/Generics/NpcBypasses/CompanionControl');
+            CompanionControl.render(session);
+            return;
+        }
     }
 
     if (data.kind === 1) { // Shout
