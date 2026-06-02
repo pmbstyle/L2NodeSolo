@@ -110,6 +110,214 @@ const BotAI = {
             session.plan = 'hunting';
         }
 
+        // Handle Fleeing States
+        if (session.plan === 'fleeing' || session.plan === 'pk_fleeing') {
+            return; // Skip normal ticks while fleeing
+        }
+
+        // ================= PK Spotting & Hunting AI Checks =================
+        const botPt = new SpeckMath.Point3D(bot.fetchLocX(), bot.fetchLocY(), bot.fetchLocZ());
+
+        if (session.plan !== 'pk_hunting') {
+            // NORMAL BOTS: Check for nearby red-named players/bots
+            let spottedPk = null;
+            let pkDistance = 99999;
+
+            World.user.sessions.forEach((user) => {
+                const other = user.actor;
+                if (other && other !== bot && other.fetchIsOnline() && !other.state.fetchDead() && other.fetchKarma() > 0) {
+                    const dist = new SpeckMath.Point3D(other.fetchLocX(), other.fetchLocY(), other.fetchLocZ()).distance(botPt);
+                    if (dist < 1500 && dist < pkDistance) {
+                        pkDistance = dist;
+                        spottedPk = other;
+                    }
+                }
+            });
+
+            if (spottedPk) {
+                // Count friendly (white) units nearby
+                let friendlyCount = 1;
+                World.user.sessions.forEach((user) => {
+                    const other = user.actor;
+                    if (other && other !== bot && other.fetchIsOnline() && !other.state.fetchDead() && other.fetchKarma() === 0) {
+                        const dist = new SpeckMath.Point3D(other.fetchLocX(), other.fetchLocY(), other.fetchLocZ()).distance(botPt);
+                        if (dist < 1000) {
+                            friendlyCount++;
+                        }
+                    }
+                });
+
+                // Fight or Flight evaluation
+                if (bot.fetchLevel() >= spottedPk.fetchLevel() || friendlyCount >= 2) {
+                    // Fight back!
+                    if (session.currentTargetId !== spottedPk.fetchId()) {
+                        session.currentTargetId = spottedPk.fetchId();
+                        bot.select({ id: spottedPk.fetchId() });
+                        
+                        if (Math.random() < 0.25) {
+                            this.say(session, `Everyone, attack the PK! Get ${spottedPk.fetchName()}!`);
+                        }
+                        this.executePvPCombat(session, bot, spottedPk, Generics);
+                    }
+                } else {
+                    // Flee in panic!
+                    if (session.plan !== 'fleeing') {
+                        session.plan = 'fleeing';
+                        session.currentTargetId = undefined;
+                        
+                        const alarmPhrases = [
+                            `Oh no! PK alert! ${spottedPk.fetchName()} is near! Run!`,
+                            `Help! Red name ${spottedPk.fetchName()} is hunting here!`,
+                            `PK! PK spotted! Flee for your lives!`,
+                            `Ahhh! ${spottedPk.fetchName()} is going to PK us! Help!`
+                        ];
+                        this.say(session, alarmPhrases[Math.floor(Math.random() * alarmPhrases.length)]);
+                        
+                        // Stand up if seated
+                        if (bot.state.fetchSeated()) {
+                            bot.state.setSeated(false);
+                            session.dataSendToOthers(ServerResponse.sitAndStand(bot), bot);
+                        }
+
+                        // Run in opposite direction
+                        const dx = bot.fetchLocX() - spottedPk.fetchLocX();
+                        const dy = bot.fetchLocY() - spottedPk.fetchLocY();
+                        const length = Math.sqrt(dx*dx + dy*dy) || 1;
+                        const fleeX = Math.round(bot.fetchLocX() + (dx / length) * 850);
+                        const fleeY = Math.round(bot.fetchLocY() + (dy / length) * 850);
+                        
+                        bot.moveTo({
+                            from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
+                            to: { locX: fleeX, locY: fleeY, locZ: bot.fetchLocZ() }
+                        });
+
+                        setTimeout(() => {
+                            if (session.plan === 'fleeing') {
+                                session.plan = 'hunting';
+                            }
+                        }, 7000); // Flee for 7 seconds
+                    }
+                    return; // Skip rest of AI tick while fleeing!
+                }
+            }
+        } else {
+            // PK BOTS: Hunt players/bots, ignore mobs, flee if threatened
+            let threatCount = 0;
+            let highestThreat = null;
+
+            World.user.sessions.forEach((user) => {
+                const other = user.actor;
+                if (other && other !== bot && other.fetchIsOnline() && !other.state.fetchDead() && other.fetchKarma() === 0) {
+                    const dist = new SpeckMath.Point3D(other.fetchLocX(), other.fetchLocY(), other.fetchLocZ()).distance(botPt);
+                    if (dist < 1500) {
+                        if (other.fetchDestId() === bot.fetchId() || dist < 700) {
+                            threatCount++;
+                            if (other.fetchLevel() > bot.fetchLevel()) {
+                                highestThreat = other;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Flee check for PK
+            if (threatCount >= 2 || highestThreat) {
+                if (session.plan !== 'pk_fleeing') {
+                    session.plan = 'pk_fleeing';
+                    session.currentTargetId = undefined;
+
+                    const panicPhrases = [
+                        `Whoa! Too many of them! Fall back!`,
+                        `You win this time, white names! Running!`,
+                        `Ah, you guys are too strong! Fallback!`,
+                        `I will be back for your blood! Fleeing!`
+                    ];
+                    this.say(session, panicPhrases[Math.floor(Math.random() * panicPhrases.length)]);
+
+                    const escapeFrom = highestThreat || bot; // flee from threat
+                    const dx = bot.fetchLocX() - escapeFrom.fetchLocX();
+                    const dy = bot.fetchLocY() - escapeFrom.fetchLocY();
+                    const length = Math.sqrt(dx*dx + dy*dy) || 1;
+                    const fleeX = Math.round(bot.fetchLocX() + (dx / length) * 900);
+                    const fleeY = Math.round(bot.fetchLocY() + (dy / length) * 900);
+
+                    bot.moveTo({
+                        from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
+                        to: { locX: fleeX, locY: fleeY, locZ: bot.fetchLocZ() }
+                    });
+
+                    setTimeout(() => {
+                        if (session.plan === 'pk_fleeing') {
+                            session.plan = 'pk_hunting';
+                        }
+                    }, 6000);
+                }
+                return; // Skip rest of AI tick while fleeing!
+            }
+
+            // Normal PK Hunt Targeting
+            if (session.currentTargetId) {
+                // Keep attacking existing target
+                const World = invoke('GameServer/World/World');
+                World.fetchUser(session.currentTargetId).then((targetActor) => {
+                    if (targetActor && targetActor.fetchIsOnline() && !targetActor.state.fetchDead()) {
+                        this.executePvPCombat(session, bot, targetActor, Generics);
+                    } else {
+                        session.currentTargetId = undefined;
+                    }
+                }).catch(() => {
+                    session.currentTargetId = undefined;
+                });
+                return;
+            } else {
+                // Scan for closest white player/bot
+                let closestWhite = null;
+                let closestDist = 99999;
+
+                World.user.sessions.forEach((user) => {
+                    const other = user.actor;
+                    if (other && other !== bot && other.fetchIsOnline() && !other.state.fetchDead() && other.fetchKarma() === 0) {
+                        const dist = new SpeckMath.Point3D(other.fetchLocX(), other.fetchLocY(), other.fetchLocZ()).distance(botPt);
+                        if (dist < 2500 && dist < closestDist) {
+                            closestDist = dist;
+                            closestWhite = other;
+                        }
+                    }
+                });
+
+                if (closestWhite) {
+                    session.currentTargetId = closestWhite.fetchId();
+                    bot.select({ id: closestWhite.fetchId() });
+                    
+                    if (Math.random() < 0.20) {
+                        this.say(session, `Found you, ${closestWhite.fetchName()}! Fresh meat!`);
+                    }
+                    this.executePvPCombat(session, bot, closestWhite, Generics);
+                } else {
+                    // Wandering around high density coordinates to find players
+                    if (Math.random() < 0.20) {
+                        // Tiny chance to relocate to a new farming sector if completely alone
+                        if (Math.random() < 0.05) {
+                            try {
+                                const BotManager = invoke('GameServer/Bot/BotManager');
+                                const densityCoord = BotManager.findHighDensityCoord();
+                                Generics.teleportTo(session, bot, densityCoord);
+                                return;
+                            } catch (err) {}
+                        }
+
+                        const randomX = bot.fetchLocX() + utils.oneFromSpan(-150, 150);
+                        const randomY = bot.fetchLocY() + utils.oneFromSpan(-150, 150);
+                        bot.moveTo({
+                            from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
+                            to: { locX: randomX, locY: randomY, locZ: bot.fetchLocZ() }
+                        });
+                    }
+                }
+                return; // PKs do not execute monster hunting!
+            }
+        }
+
         // 3. Resting / Mana recovery logic
         if (session.plan === 'hunting') {
             const hpRatio = bot.fetchHp() / bot.fetchMaxHp();
@@ -346,6 +554,10 @@ const BotAI = {
                 }
             }
         }
+    },
+
+    executePvPCombat(session, bot, victim, Generics) {
+        this.executeCombat(session, bot, victim, Generics);
     },
 
     executeCombat(session, bot, npc, Generics) {

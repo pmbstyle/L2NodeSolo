@@ -125,11 +125,31 @@ const BotManager = {
                 World.insertUser(session);
                 session.actor.enterWorld();
                 
-                // Designate some extra bots as permanent town gossips
-                if (character.name !== "Bot_Gimli" && character.name !== "Bot_Legolas" && character.name !== "Bot_Gandalf" && Math.random() < 0.40) {
-                    session.plan = 'resting';
-                    session.townGossip = true;
-                    session.actor.state.setSeated(true);
+                // Designate some extra bots as permanent town gossips, and Aragorn as PK!
+                if (character.name !== "Bot_Gimli" && character.name !== "Bot_Legolas" && character.name !== "Bot_Gandalf") {
+                    if (character.name === "Aragorn") {
+                        session.plan = 'pk_hunting';
+                        session.actor.setPk(5);
+                        session.actor.setKarma(9999);
+                        
+                        // Teleport Aragorn to the highest player density coordinate after spawning
+                        setTimeout(() => {
+                            const densityCoord = this.findHighDensityCoord();
+                            session.actor.setLocXYZ(densityCoord);
+                            
+                            const TeleportTo = invoke('GameServer/Actor/Generics/TeleportTo');
+                            if (TeleportTo && typeof TeleportTo === 'function') {
+                                TeleportTo(session, session.actor, densityCoord);
+                            }
+                            utils.infoSuccess("BotManager", "PK Bot %s (Level %d) is hunting at %d, %d", character.name, character.level, densityCoord.locX, densityCoord.locY);
+                        }, 8000);
+                    } else if (Math.random() < 0.40) {
+                        session.plan = 'resting';
+                        session.townGossip = true;
+                        session.actor.state.setSeated(true);
+                    } else {
+                        session.plan = 'hunting';
+                    }
                 } else {
                     session.plan = 'hunting';
                 }
@@ -138,7 +158,10 @@ const BotManager = {
                 BotAI.init(session);
                 
                 this.sessions.push(session);
-                utils.infoSuccess("BotManager", "%s (Level %d) is active in World %s", character.name, character.level, session.townGossip ? "[Gossip Mode]" : "[Hunting Mode]");
+                let modeText = "[Hunting Mode]";
+                if (session.townGossip) modeText = "[Gossip Mode]";
+                if (session.plan === 'pk_hunting') modeText = "[PK Mode]";
+                utils.infoSuccess("BotManager", "%s (Level %d) is active in World %s", character.name, character.level, modeText);
             });
         });
     },
@@ -339,6 +362,43 @@ const BotManager = {
     handleBotGlobalShout(botSession) {
         const text = GLOBAL_SHOUTS[Math.floor(Math.random() * GLOBAL_SHOUTS.length)];
         this.botShout(botSession, text);
+    },
+
+    findHighDensityCoord() {
+        const coords = { locX: -83000, locY: 243000, locZ: -3700 }; // default Keltir spot
+        const sectors = {};
+        const World = invoke('GameServer/World/World');
+
+        let maxCount = 0;
+        let bestSector = null;
+
+        World.user.sessions.forEach((session) => {
+            const actor = session.actor;
+            if (actor && actor.fetchIsOnline() && actor.fetchKarma() === 0 && actor.fetchName() !== 'Bot_Gimli' && actor.fetchName() !== 'Bot_Legolas' && actor.fetchName() !== 'Bot_Gandalf') {
+                const sx = Math.floor(actor.fetchLocX() / 4000);
+                const sy = Math.floor(actor.fetchLocY() / 4000);
+                const key = `${sx},${sy}`;
+                if (!sectors[key]) {
+                    sectors[key] = { count: 0, sumX: 0, sumY: 0, sumZ: 0 };
+                }
+                sectors[key].count++;
+                sectors[key].sumX += actor.fetchLocX();
+                sectors[key].sumY += actor.fetchLocY();
+                sectors[key].sumZ += actor.fetchLocZ();
+
+                if (sectors[key].count > maxCount) {
+                    maxCount = sectors[key].count;
+                    bestSector = sectors[key];
+                }
+            }
+        });
+
+        if (bestSector) {
+            coords.locX = Math.floor(bestSector.sumX / bestSector.count);
+            coords.locY = Math.floor(bestSector.sumY / bestSector.count);
+            coords.locZ = Math.floor(bestSector.sumZ / bestSector.count);
+        }
+        return coords;
     }
 };
 
