@@ -33,20 +33,43 @@ class Backpack extends BackpackModel {
         this.fetchItem(id, (item) => {
             const total = item.fetchAmount() - amount;
             if (total > 0) {
-                Database.updateItemAmount(session.actor.fetchId(), item.fetchId(), total).then(() => {
-                    item.setAmount(total);
-                    session.dataSendToMe(ServerResponse.itemsList(this.fetchItems()));
-                    callback(item.fetchSelfId());
+                // Update memory state instantly
+                item.setAmount(total);
+                session.dataSendToMe(ServerResponse.itemsList(this.fetchItems()));
+                callback(item.fetchSelfId());
+
+                // Update database in the background
+                Database.updateItemAmount(session.actor.fetchId(), item.fetchId(), total).catch((err) => {
+                    utils.infoWarn('Database', 'Failed to update item amount: ' + err);
                 });
             }
             else {
-                Database.deleteItem(session.actor.fetchId(), item.fetchId()).then(() => {
-                    this.items = this.fetchItems().filter((ob) => ob.fetchId() !== id);
-                    session.dataSendToMe(ServerResponse.itemsList(this.fetchItems()));
-                    callback(item.fetchSelfId());
+                // Update memory state instantly
+                this.items = this.fetchItems().filter((ob) => ob.fetchId() !== id);
+                session.dataSendToMe(ServerResponse.itemsList(this.fetchItems()));
+                callback(item.fetchSelfId());
+
+                // Update database in the background
+                Database.deleteItem(session.actor.fetchId(), item.fetchId()).catch((err) => {
+                    utils.infoWarn('Database', 'Failed to delete item: ' + err);
                 });
             }
         });
+    }
+
+    consumeSoulshot(session, callback = () => {}) {
+        if (session.actor.isDead()) {
+            return callback(false);
+        }
+
+        const found = this.items.find(item => [1835, 1463, 1464, 1465, 1466, 1467].includes(item.fetchSelfId()));
+        if (found) {
+            this.deleteItem(session, found.fetchId(), 1, () => {
+                callback(true);
+            });
+        } else {
+            callback(false);
+        }
     }
 
     dropItem(session, id, amount, locX, locY, locZ) {
@@ -69,6 +92,26 @@ class Backpack extends BackpackModel {
                 this.equipGear(session, item);
             }
             else {
+                if ([1835, 1463, 1464, 1465, 1466, 1467].includes(item.fetchSelfId())) {
+                    if (session.actor.soulshotLoaded) {
+                        return; // Already loaded
+                    }
+                    this.deleteItem(session, id, 1, () => {
+                        session.actor.soulshotLoaded = true;
+                        
+                        // Play activation effect (Skill 2039)
+                        session.dataSendToMeAndOthers(
+                            ServerResponse.skillStarted(session.actor, session.actor.fetchId(), {
+                                fetchSelfId: () => 2039,
+                                fetchCalculatedHitTime: () => 0,
+                                fetchReuseTime: () => 0
+                            }), 
+                            session.actor
+                        );
+                    });
+                    return;
+                }
+                else
                 if ([1665, 1863].includes(item.fetchSelfId())) { // TODO: This needs to be out of here...
                     session.dataSendToMe(
                         ServerResponse.showMap(item.fetchSelfId())

@@ -46,6 +46,25 @@ class Attack {
             return;
         }
 
+        // Auto-consume Soulshot if available in backpack and not already loaded
+        if (!actor.soulshotLoaded && actor.backpack && typeof actor.backpack.consumeSoulshot === 'function') {
+            actor.backpack.consumeSoulshot(session, (success) => {
+                if (success) {
+                    actor.soulshotLoaded = true;
+                    
+                    // Play activation effect (Skill 2039)
+                    session.dataSendToMeAndOthers(
+                        ServerResponse.skillStarted(actor, actor.fetchId(), {
+                            fetchSelfId: () => 2039,
+                            fetchCalculatedHitTime: () => 0,
+                            fetchReuseTime: () => 0
+                        }), 
+                        actor
+                    );
+                }
+            });
+        }
+
         const speed = Formulas.calcMeleeAtkTime(actor.fetchCollectiveAtkSpd());
         const hitLanded = Formulas.calcHitChance();
         session.dataSendToMeAndOthers(ServerResponse.attack(actor, creature.fetchId(), hitLanded ? 0x00 : 0x80), actor);
@@ -59,7 +78,14 @@ class Attack {
             if (hitLanded) {
                 const pAtk  = actor.fetchCollectivePAtk();
                 const pRand = actor.backpack.fetchTotalWeaponPAtkRnd() ?? 0;
-                this.hit(session, actor, creature, Formulas.calcMeleeHit(pAtk, pRand, creature.fetchCollectivePDef()));
+                let damage = Formulas.calcMeleeHit(pAtk, pRand, creature.fetchCollectivePDef());
+                
+                if (actor.soulshotLoaded) {
+                    damage = Math.round(damage * 2.0); // Double physical damage!
+                    actor.soulshotLoaded = false;
+                }
+                
+                this.hit(session, actor, creature, damage);
             }
             else {
                 ConsoleText.transmit(session, ConsoleText.caption.missedHit);
