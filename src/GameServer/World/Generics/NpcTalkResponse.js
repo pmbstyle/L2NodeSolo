@@ -64,9 +64,29 @@ function npcTalkResponse(session, data) {
                 let itemIds = [];
 
                 if (parts[1] === 'grocer') {
-                    itemIds = [1835, 1830, 1061, 1062, 1863];
+                    itemIds = [1830, 1835, 1061, 1062, 1863, 17, 65];
                 } else if (parts[1] === 'weapons') {
-                    itemIds = [1, 2, 3, 4, 5, 14, 15, 21, 22, 23, 28, 29, 30, 34, 35, 36, 37, 38, 39, 24, 25, 26, 27, 31, 32];
+                    itemIds = [
+                        // Weapons
+                        1, 3, 66, 67, 68,     // Swords
+                        4, 5, 1563,           // Blunts
+                        13, 14,               // Bows
+                        10, 11, 12,           // Daggers
+                        6, 7, 8, 9,           // Staffs/Wands
+                        15,                   // Spears
+                        // Shields
+                        18, 19, 20, 102,
+                        // Shirts / Tops
+                        21, 22, 23, 24, 25, 26, 27, 390,
+                        // Pants / Gaiters
+                        28, 29, 30, 31, 32, 33, 34, 412,
+                        // Footwear
+                        35, 36, 37, 38, 39,
+                        // Headwear
+                        41, 42, 43, 44,
+                        // Handwear
+                        48, 49, 50, 51
+                    ];
                 } else if (parts[1] === 'jewelry') {
                     itemIds = [112, 113, 114, 115, 116, 118, 845, 846, 875, 876, 877, 906, 907, 908];
                 } else if (parts[1] === 'amulets') {
