@@ -20,8 +20,13 @@ module.exports = {
         if (hpRatio >= 0.95 && mpRatio >= 0.95) {
             bot.state.setSeated(false);
             session.dataSendToOthers(ServerResponse.sitAndStand(bot), bot);
-            session.plan = 'hunting';
-            BotAI.say(session, "Fully rested! Ready to hunt again.");
+            if (session.followPlayerSession) {
+                session.plan = 'following';
+                BotAI.say(session, "Fully rested! Ready to follow you again.");
+            } else {
+                session.plan = 'hunting';
+                BotAI.say(session, "Fully rested! Ready to hunt again.");
+            }
         } else {
             // 3% chance per tick to attempt conversation when resting near other bots
             if (Math.random() < 0.03) {

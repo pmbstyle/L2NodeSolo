@@ -163,7 +163,12 @@ const BotAI = {
 
     executeCombat(session, bot, npc, Generics) {
         const botName = bot.fetchName();
-        if (botName === 'Bot_Gandalf') {
+        const classId = bot.fetchClassId();
+
+        const MAGE_CLASSES = [10, 11, 12, 13, 14, 15, 16, 17, 25, 26, 27, 28, 29, 30, 38, 39, 40, 41, 42, 43];
+        const ARCHER_CLASSES = [8, 9, 22, 23, 35, 36];
+
+        if (botName === 'Bot_Gandalf' || MAGE_CLASSES.includes(classId)) {
             const SkillModel = invoke('GameServer/Model/Skill');
             let skill = bot.skillset.fetchSkill(1177);
             if (!skill) {
@@ -186,7 +191,7 @@ const BotAI = {
                 return;
             }
         }
-        else if (botName === 'Bot_Legolas') {
+        else if (botName === 'Bot_Legolas' || ARCHER_CLASSES.includes(classId)) {
             const SkillModel = invoke('GameServer/Model/Skill');
             let skill = bot.skillset.fetchSkill(56);
             if (!skill) {
@@ -207,6 +212,32 @@ const BotAI = {
             if (bot.fetchMp() >= skill.fetchConsumedMp()) {
                 Generics.skillExec(session, bot, { id: npc.fetchId(), selfId: 56, ctrl: true });
                 return;
+            }
+        }
+        else {
+            // Melee Fighter: Cast Power Strike with 40% probability if MP allows
+            if (Math.random() < 0.40) {
+                const SkillModel = invoke('GameServer/Model/Skill');
+                let skill = bot.skillset.fetchSkill(3);
+                if (!skill) {
+                    skill = new SkillModel({
+                        selfId: 3,
+                        name: "Power Strike",
+                        level: 1,
+                        hp: 0,
+                        mp: 4,
+                        hitTime: 1000,
+                        reuse: 2000,
+                        power: 10,
+                        distance: 80,
+                        passive: false
+                    });
+                    bot.skillset.skills.push(skill);
+                }
+                if (bot.fetchMp() >= skill.fetchConsumedMp()) {
+                    Generics.skillExec(session, bot, { id: npc.fetchId(), selfId: 3, ctrl: true });
+                    return;
+                }
             }
         }
 
