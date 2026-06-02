@@ -453,8 +453,9 @@ const BotManager = {
             if (nearbyBots.length < TARGET_BOTS_COUNT) {
                 const countToTeleport = TARGET_BOTS_COUNT - nearbyBots.length;
 
-                // Find bots that are currently far (> 3000) from this player, and not close to any other player
+                // Find bots that are currently far (> 2500) from this player, and not close to any other player
                 const farBots = this.sessions.filter(botSession => {
+                    if (botSession.followPlayerSession) return false; // Do not dynamically scale/teleport active companion bots!
                     const bot = botSession.actor;
                     if (!bot || !bot.fetchIsOnline()) return false;
 
@@ -462,7 +463,7 @@ const BotManager = {
                     const dy = bot.fetchLocY() - py;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    if (dist <= 3000) return false; // Too close to current player to be considered "far"
+                    if (dist <= 2500) return false; // Eliminate the dead zone between 2500 and 3000
 
                     // Make sure it's not near any other online player either
                     const isNearOtherPlayer = onlinePlayers.some(otherPlayerSession => {
