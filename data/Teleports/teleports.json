@@ -90,4 +90,48 @@
     "id": 1018,
     "template": { "description": "Dwarven Village / Elven Village", "price": 23000 },
     "spawns": [{ "locX": 46934, "locY": 51467, "locZ": -2977 }]
+},{
+    "id": 2,
+    "template": { "description": "Gludio Town", "price": 1000 },
+    "spawns": [{ "locX": -12736, "locY": 122816, "locZ": -3114 }]
+},{
+    "id": 16,
+    "template": { "description": "Gludio Town", "price": 1000 },
+    "spawns": [{ "locX": -12736, "locY": 122816, "locZ": -3114 }]
+},{
+    "id": 1015,
+    "template": { "description": "Talking Island Village", "price": 1000 },
+    "spawns": [{ "locX": -84108, "locY": 244604, "locZ": -3729 }]
+},{
+    "id": 1019,
+    "template": { "description": "Talking Island Village", "price": 1000 },
+    "spawns": [{ "locX": -84108, "locY": 244604, "locZ": -3729 }]
+},{
+    "id": 1017,
+    "template": { "description": "Dark Elf Village", "price": 1000 },
+    "spawns": [{ "locX": 9670, "locY": 15537, "locZ": -4574 }]
+},{
+    "id": 1021,
+    "template": { "description": "Orc Village", "price": 1000 },
+    "spawns": [{ "locX": 84814, "locY": 15886, "locZ": -4291 }]
+},{
+    "id": 1013,
+    "template": { "description": "Neutral Zone", "price": 500 },
+    "spawns": [{ "locX": -10674, "locY": 75550, "locZ": -3597 }]
+},{
+    "id": 1022,
+    "template": { "description": "Western Mining Zone", "price": 500 },
+    "spawns": [{ "locX": 169008, "locY": -208272, "locZ": -3504 }]
+},{
+    "id": 1020,
+    "template": { "description": "Gludin Town", "price": 1000 },
+    "spawns": [{ "locX": -80752, "locY": 149776, "locZ": -3044 }]
+},{
+    "id": 1008,
+    "template": { "description": "Dion Town", "price": 1000 },
+    "spawns": [{ "locX": 83396, "locY": 147904, "locZ": -3404 }]
+},{
+    "id": 1009,
+    "template": { "description": "Giran Town", "price": 1500 },
+    "spawns": [{ "locX": 15631, "locY": 142885, "locZ": -2704 }]
 }]
