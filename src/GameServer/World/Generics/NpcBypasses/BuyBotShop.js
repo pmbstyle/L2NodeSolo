@@ -29,7 +29,7 @@ module.exports = function(session, parts) {
     });
 
     if (!nearestMerchant || minDist > 500) {
-        session.dataSendToMe(ServerResponse.speak(player, { kind: 0, text: "Торговец слишком далеко." }));
+        session.dataSendToMe(ServerResponse.speak(player, { kind: 0, text: "Merchant is too far." }));
         return;
     }
 
@@ -113,7 +113,7 @@ module.exports = function(session, parts) {
     });
 
     if (list.length === 0) {
-        session.dataSendToMe(ServerResponse.speak(player, { kind: 0, text: "В окрестностях города нет монстров с дропом." }));
+        session.dataSendToMe(ServerResponse.speak(player, { kind: 0, text: "There are no monsters with drops in this area." }));
         return;
     }
 

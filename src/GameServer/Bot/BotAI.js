@@ -121,6 +121,7 @@ const BotAI = {
                 } else {
                     if (bot.fetchName().startsWith("Merchant_")) {
                         session.plan = 'merchant';
+                        bot.state.setSeated(true);
                         spawnTarget = {
                             locX: session.initialSpawnCoord.locX,
                             locY: session.initialSpawnCoord.locY,

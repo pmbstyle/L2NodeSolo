@@ -50,7 +50,7 @@ function charInfo(actor) {
         .writeD(0x00)  // Ally Id
         .writeD(0x00)  // Ally Crest Id
         .writeD(0x00)  // ?
-        .writeC(0x01)  // Standing = 1
+        .writeC(actor.state.fetchSeated() ? 0x00 : 0x01)  // Sitting = 0, Standing = 1
         .writeC(0x01)  // Running = 1
         .writeC(0x00)  // Combat = 1
         .writeC(0x00)  // Dead = 1

@@ -173,6 +173,7 @@ const BotManager = {
                     } else if (character.name.startsWith("Merchant_")) {
                         session.plan = 'merchant';
                         session.actor.setTitle("Local Drops");
+                        session.actor.state.setSeated(true);
                     } else if (Math.random() < 0.40) {
                         session.plan = 'resting';
                         session.townGossip = true;
