@@ -49,5 +49,6 @@ module.exports = {
     partySmallWindowDeleteAll: require('./PartySmallWindowDeleteAll'),
      partySmallWindowUpdate: require('./PartySmallWindowUpdate'),
    abnormalStatusUpdate: require('./AbnormalStatusUpdate'),
-              joinParty: require('./JoinParty')
+              joinParty: require('./JoinParty'),
+         relationChanged: require('./RelationChanged')
 };

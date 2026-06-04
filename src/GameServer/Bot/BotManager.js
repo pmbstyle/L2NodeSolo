@@ -192,6 +192,7 @@ const BotManager = {
                 // Explicitly send the bot's CharInfo to other players in the world
                 const ServerResponse = invoke('GameServer/Network/Response');
                 session.dataSendToOthers(ServerResponse.charInfo(session.actor), session.actor);
+                session.dataSendToOthers(ServerResponse.relationChanged(session.actor), session.actor);
 
                 // Start AI loop
                 BotAI.init(session);

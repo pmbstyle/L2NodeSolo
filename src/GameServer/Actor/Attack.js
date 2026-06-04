@@ -171,6 +171,7 @@ class Attack {
             actor.setPvpFlag(1);
             session.dataSendToMe(ServerResponse.userInfo(actor));
             session.dataSendToOthers(ServerResponse.charInfo(actor), actor);
+            session.dataSendToOthers(ServerResponse.relationChanged(actor), actor);
 
             if (session.pvpFlagTimer) {
                 clearTimeout(session.pvpFlagTimer);
@@ -179,6 +180,7 @@ class Attack {
                 actor.setPvpFlag(0);
                 session.dataSendToMe(ServerResponse.userInfo(actor));
                 session.dataSendToOthers(ServerResponse.charInfo(actor), actor);
+                session.dataSendToOthers(ServerResponse.relationChanged(actor), actor);
                 session.pvpFlagTimer = undefined;
             }, 15000); // 15 seconds flag duration
 

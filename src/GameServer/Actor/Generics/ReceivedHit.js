@@ -22,6 +22,7 @@ function receivedHit(session, actor, hit) {
                 attacker.setPvp(attacker.fetchPvp() + 1);
                 session.dataSendToMe(ServerResponse.userInfo(attacker));
                 session.dataSendToOthers(ServerResponse.charInfo(attacker), attacker);
+                session.dataSendToOthers(ServerResponse.relationChanged(attacker), attacker);
                 Database.updateCharacterPvpPkKarma(attacker.fetchId(), attacker.fetchPvp(), attacker.fetchPk(), attacker.fetchKarma());
             } else {
                 // PK kill (murdering an innocent white player/bot)
@@ -29,11 +30,20 @@ function receivedHit(session, actor, hit) {
                 attacker.setKarma(attacker.fetchKarma() + 360);
                 session.dataSendToMe(ServerResponse.userInfo(attacker));
                 session.dataSendToOthers(ServerResponse.charInfo(attacker), attacker);
+                session.dataSendToOthers(ServerResponse.relationChanged(attacker), attacker);
                 Database.updateCharacterPvpPkKarma(attacker.fetchId(), attacker.fetchPvp(), attacker.fetchPk(), attacker.fetchKarma());
             }
 
             // Clear victim's flag
             victim.setPvpFlag(0);
+            if (victim.session) {
+                victim.session.dataSendToMe(ServerResponse.userInfo(victim));
+                victim.session.dataSendToOthers(ServerResponse.relationChanged(victim), victim);
+            } else {
+                session.dataSendToOthers(ServerResponse.relationChanged(victim), victim);
+            }
+            session.dataSendToMe(ServerResponse.relationChanged(victim));
+
             if (victim.session && victim.session.pvpFlagTimer) {
                 clearTimeout(victim.session.pvpFlagTimer);
                 victim.session.pvpFlagTimer = undefined;
