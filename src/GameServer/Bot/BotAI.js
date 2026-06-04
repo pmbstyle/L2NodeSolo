@@ -86,11 +86,7 @@ const BotAI = {
             const playerSession = session.followPlayerSession;
             if (playerSession && playerSession.actor && playerSession.actor.fetchIsOnline()) {
                 playerSession.dataSendToMe(
-                    ServerResponse.partySmallWindowAll(
-                        playerSession.actor.fetchId(),
-                        0,
-                        [bot]
-                    )
+                    ServerResponse.partySmallWindowUpdate(bot)
                 );
             }
         }
