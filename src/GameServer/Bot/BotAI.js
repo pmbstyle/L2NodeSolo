@@ -134,10 +134,12 @@ const BotAI = {
             }
         });
 
-        if (isCompanion || minDist <= 500) {
+        if (isCompanion || minDist <= 1200) {
             return 1000 + Math.random() * 200;
-        } else if (minDist <= 1500) {
+        } else if (minDist <= 3000) {
             return 3000;
+        } else if (minDist <= 6000) {
+            return 5000;
         } else {
             return 30000;
         }

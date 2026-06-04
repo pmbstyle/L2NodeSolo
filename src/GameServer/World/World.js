@@ -40,7 +40,7 @@ const World = {
     },
 
     fetchVisibleUsers(session, creature) {
-        const actorArea = new SpeckMath.Circle(creature.fetchLocX(), creature.fetchLocY(), 5000);
+        const actorArea = new SpeckMath.Circle(creature.fetchLocX(), creature.fetchLocY(), 6000);
         return this.user.sessions.filter((ob) => session !== ob && ob.actor?.fetchIsOnline() === true && actorArea.contains(new SpeckMath.Point(ob.actor?.fetchLocX() ?? 0, ob.actor?.fetchLocY() ?? 0))) ?? [];
     },
 
@@ -139,7 +139,7 @@ const World = {
     },
 
     indexSpawnsInGrid() {
-        const GRID_SIZE = 5000;
+        const GRID_SIZE = 6000;
         this.npc.grid = {};
         this.npc.spawns.forEach((npc) => {
             const gx = Math.floor(npc.fetchLocX() / GRID_SIZE);
@@ -154,7 +154,7 @@ const World = {
     },
 
     fetchNpcsInRadius(locX, locY, radius) {
-        const GRID_SIZE = 5000;
+        const GRID_SIZE = 6000;
         const bgx = Math.floor(locX / GRID_SIZE);
         const bgy = Math.floor(locY / GRID_SIZE);
         const npcs = [];

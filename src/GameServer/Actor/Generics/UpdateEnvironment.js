@@ -1,10 +1,11 @@
 const ServerResponse = invoke('GameServer/Network/Response');
 const World          = invoke('GameServer/World/World');
 const SpeckMath      = invoke('GameServer/SpeckMath');
+const BotAI          = invoke('GameServer/Bot/BotAI');
 
 function updateEnvironment(session, actor) {
-    const actorArea = new SpeckMath.Circle(actor.fetchLocX(), actor.fetchLocY(), 5000);
-    const npcs = World.fetchNpcsInRadius(actor.fetchLocX(), actor.fetchLocY(), 5000).filter((ob) => ob.state.fetchDead() === false) ?? [];
+    const actorArea = new SpeckMath.Circle(actor.fetchLocX(), actor.fetchLocY(), 6000);
+    const npcs = World.fetchNpcsInRadius(actor.fetchLocX(), actor.fetchLocY(), 6000).filter((ob) => ob.state.fetchDead() === false) ?? [];
 
     if (new SpeckMath.Point(actor.previousXY?.locX ?? 0, actor.previousXY?.locY ?? 0).distance(new SpeckMath.Point(actor.fetchLocX(), actor.fetchLocY())) >= 1000) {
         npcs.forEach((npc) => { // Gives a sense of random NPC Animation to the actor
@@ -16,6 +17,18 @@ function updateEnvironment(session, actor) {
             session.dataSendToMe(ServerResponse.relationChanged(user.actor));
             user.dataSendToMe(ServerResponse.charInfo(actor));
             user.dataSendToMe(ServerResponse.relationChanged(actor));
+
+            // Immediate bot AI wakeup when entering player's visibility range (within 6000 range)
+            const dx = actor.fetchLocX() - user.actor.fetchLocX();
+            const dy = actor.fetchLocY() - user.actor.fetchLocY();
+            if (dx * dx + dy * dy <= 6000 * 6000) {
+                if (user.constructor.name === 'BotSession') {
+                    BotAI.wakeup(user);
+                }
+                if (session.constructor.name === 'BotSession') {
+                    BotAI.wakeup(session);
+                }
+            }
         });
 
         actor.previousXY = actorArea.toCoords();
