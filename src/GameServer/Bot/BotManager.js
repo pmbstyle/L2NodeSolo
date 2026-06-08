@@ -5,6 +5,7 @@ const World       = invoke('GameServer/World/World');
 const BotSession  = invoke('GameServer/Bot/BotSession');
 const BotAI       = invoke('GameServer/Bot/BotAI');
 const GeodataEngine = invoke('GameServer/Geodata/GeodataEngine');
+const MerchantConfigs = invoke('GameServer/Bot/MerchantStoreConfigs');
 
 const BOTS_TO_SPAWN = [
     { name: "Bot_Gimli",   race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0 }, // Dwarf
@@ -12,13 +13,10 @@ const BOTS_TO_SPAWN = [
     { name: "Bot_Gandalf", race: 0, sex: 0, classId: 10, face: 0, hair: 2, hairColor: 0 }  // Human Mage
 ];
 
-const MERCHANT_BOTS = [
-    { name: "Merchant_TI",     race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0, locX: -84168, locY: 244729, locZ: -3730 },
-    { name: "Merchant_Gludio", race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0, locX: -12522, locY: 122926, locZ: -3118 },
-    { name: "Merchant_Dion",   race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0, locX: 15814,  locY: 143129, locZ: -2707 },
-    { name: "Merchant_Giran",  race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0, locX: 83550,  locY: 148093, locZ: -3406 },
-    { name: "Merchant_Oren",   race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0, locX: 83110,  locY: 53327,  locZ: -1497 }
-];
+const MERCHANT_BOTS = Object.keys(MerchantConfigs).map(name => {
+    const cfg = MerchantConfigs[name];
+    return { name: name, race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0, locX: cfg.locX, locY: cfg.locY, locZ: cfg.locZ };
+});
 
 const EXTRA_BOTS_COUNT = 10; // Configurable: Set to 20, 50, or more to scale up the bot count!
 
@@ -175,8 +173,27 @@ const BotManager = {
                         }, 8000);
                     } else if (character.name.startsWith("Merchant_")) {
                         session.plan = 'merchant';
-                        session.actor.setTitle("Local Drops");
                         session.actor.state.setSeated(true);
+
+                        const storeCfg = MerchantConfigs[character.name];
+                        if (storeCfg) {
+                            session.actor.setTitle(storeCfg.title);
+                            session.actor.setPrivateStoreType(storeCfg.storeType);
+
+                            let fakeObjectIdSeq = 600000000 + utils.randomNumber(100000000);
+                            const storeItems = storeCfg.items.map(item => ({
+                                objectId: ++fakeObjectIdSeq,
+                                selfId: item.selfId,
+                                price: item.price,
+                                count: item.count
+                            }));
+
+                            session.actor.setPrivateStore({
+                                storeType: storeCfg.storeType,
+                                title: storeCfg.title,
+                                items: storeItems
+                            });
+                        }
                     } else if (Math.random() < 0.40) {
                         session.plan = 'resting';
                         session.townGossip = true;

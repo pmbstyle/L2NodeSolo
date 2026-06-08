@@ -76,7 +76,7 @@ function userInfo(actor) {
         .writeD(0x00)  // Ally Crest ID
         .writeD(0x00)  // ?
         .writeC(0x00)  // ?
-        .writeC(0x00)  // Private Store Type
+        .writeC(actor.fetchPrivateStoreType())  // Private Store Type
         .writeC(actor.fetchIsCrafter())
         .writeD(actor.fetchPk())
         .writeD(actor.fetchPvp())

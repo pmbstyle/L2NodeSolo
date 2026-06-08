@@ -56,7 +56,7 @@ function charInfo(actor) {
         .writeC(0x00)  // Dead = 1
         .writeC(0x00)  // Invisible = 1
         .writeC(0x00)  // Mount
-        .writeC(0x00)  // Sells
+        .writeC(actor.fetchPrivateStoreType())  // Sells
         .writeH(0x00)  // Cubic count
         .writeC(0x00)  // Party matching
         .writeD(0x00)  // Abnormal effect

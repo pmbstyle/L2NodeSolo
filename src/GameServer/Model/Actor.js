@@ -52,6 +52,22 @@ class ActorModel extends CreatureModel {
         this.model.isOnline = data;
     }
 
+    setPrivateStoreType(data) {
+        this.model.privateStoreType = data;
+    }
+
+    fetchPrivateStoreType() {
+        return this.model.privateStoreType || 0;
+    }
+
+    setPrivateStore(data) {
+        this.model.privateStore = data;
+    }
+
+    fetchPrivateStore() {
+        return this.model.privateStore || null;
+    }
+
     setPvpFlag(data) {
         this.model.pvpFlag = data;
     }
