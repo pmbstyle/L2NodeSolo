@@ -10,6 +10,39 @@ function select(session, actor, data) {
         return;
     }
 
+    // Check BotManager sessions first (bots may not be in World.user.sessions)
+    const BotManager = invoke('GameServer/Bot/BotManager');
+    const botSession = BotManager.sessions.find(s => Number(s.actor?.fetchId()) === Number(data.id));
+
+    if (botSession) {
+        const user = botSession.actor;
+        if (user.fetchId() !== actor.fetchDestId()) { // First click on bot
+            actor.setDestId(user.fetchId());
+            session.dataSendToMe(ServerResponse.destSelected(actor.fetchDestId()));
+            return;
+        }
+        // Second click on bot
+        if (user.fetchPrivateStoreType && user.fetchPrivateStoreType() !== 0) {
+            session.viewedPrivateStoreSeller = user;
+            if (user.fetchPrivateStoreType() === 1) {
+                const isMerchantBot = botSession.plan === 'merchant';
+                if (isMerchantBot) {
+                    const BuyMerchantItem = invoke('GameServer/World/Generics/NpcBypasses/BuyMerchantItem');
+                    BuyMerchantItem(session, ["buy-merchant-item"]);
+                } else {
+                    session.dataSendToMe(ServerResponse.privateStoreMsg(session.actor, user));
+                    session.dataSendToMe(ServerResponse.privateStoreListSell(user, session.actor));
+                }
+            } else if (user.fetchPrivateStoreType() === 2) {
+                session.dataSendToMe(ServerResponse.privateStoreListBuy(session.actor, user));
+            }
+            return;
+        }
+        Generics.attackRequest(session, actor, data);
+        return;
+    }
+
+    // Fallback to World lookups for non-bot entities
     World.fetchNpc(data.id).then((npc) => {
         if (npc.fetchId() !== actor.fetchDestId()) { // First click on a Creature
             actor.setDestId(npc.fetchId());
@@ -30,6 +63,16 @@ function select(session, actor, data) {
                     session.dataSendToMe(ServerResponse.destSelected(actor.fetchDestId()));
                 }
                 else { // Second click on same User
+                    if (user.fetchPrivateStoreType && user.fetchPrivateStoreType() !== 0) {
+                        session.viewedPrivateStoreSeller = user;
+                        if (user.fetchPrivateStoreType() === 1) {
+                            session.dataSendToMe(ServerResponse.privateStoreMsg(session.actor, user));
+                            session.dataSendToMe(ServerResponse.privateStoreListSell(user, session.actor));
+                        } else if (user.fetchPrivateStoreType() === 2) {
+                            session.dataSendToMe(ServerResponse.privateStoreListBuy(session.actor, user));
+                        }
+                        return;
+                    }
                     Generics.attackRequest(session, actor, data);
                 }
             }).catch(() => {
