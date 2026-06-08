@@ -77,7 +77,7 @@ module.exports = {
 
     // ----- Buy Bots (players sell to them) -----
 
-    "Merchant_TI_Buy": {
+    "MerBuy_TI": {
         title: "Buyer - D Mats",
         storeType: 2,
         locX: -84120, locY: 244760, locZ: -3730,
@@ -91,7 +91,7 @@ module.exports = {
             { selfId: 1872, price: 75,  count: 999999 },
         ]
     },
-    "Merchant_Gludio_Buy": {
+    "MerBuy_Gludio": {
         title: "Buyer - D/C Mats",
         storeType: 2,
         locX: -12480, locY: 122950, locZ: -3118,
@@ -104,7 +104,7 @@ module.exports = {
             { selfId: 1880, price: 1200, count: 999999 },
         ]
     },
-    "Merchant_Dion_Buy": {
+    "MerBuy_Dion": {
         title: "Buyer - C Mats",
         storeType: 2,
         locX: 15860, locY: 143100, locZ: -2707,
@@ -117,7 +117,7 @@ module.exports = {
             { selfId: 1884, price: 200,  count: 999999 },
         ]
     },
-    "Merchant_Giran_Buy": {
+    "MerBuy_Giran": {
         title: "Buyer - C/B Mats",
         storeType: 2,
         locX: 83510, locY: 148120, locZ: -3406,
@@ -130,7 +130,7 @@ module.exports = {
             { selfId: 1889, price: 1800, count: 999999 },
         ]
     },
-    "Merchant_Oren_Buy": {
+    "MerBuy_Oren": {
         title: "Buyer - B/A Mats",
         storeType: 2,
         locX: 83150, locY: 53300, locZ: -1497,

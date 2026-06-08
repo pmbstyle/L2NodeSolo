@@ -18,6 +18,8 @@ const MERCHANT_BOTS = Object.keys(MerchantConfigs).map(name => {
     return { name: name, race: 4, sex: 0, classId: 53, face: 0, hair: 0, hairColor: 0, locX: cfg.locX, locY: cfg.locY, locZ: cfg.locZ };
 });
 
+const isMerchantName = name => name.startsWith("Merchant_") || name.startsWith("MerBuy_");
+
 const EXTRA_BOTS_COUNT = 10; // Configurable: Set to 20, 50, or more to scale up the bot count!
 
 const FANTASY_NAMES = [
@@ -126,7 +128,7 @@ const BotManager = {
 
             Shared.fetchClassInformation(character.classId).then((classInfo) => {
                 // Reset merchant bots back to their exact designated coordinates on load
-                if (character.name.startsWith("Merchant_")) {
+                if (isMerchantName(character.name)) {
                     const config = MERCHANT_BOTS.find(b => b.name === character.name);
                     if (config) {
                         character.locX = config.locX;
@@ -136,7 +138,7 @@ const BotManager = {
                 }
 
                 // Randomize initial location slightly to scatter them across the starting area
-                if (character.name !== "Bot_Gimli" && character.name !== "Bot_Legolas" && character.name !== "Bot_Gandalf" && character.name !== "Aragorn" && !character.name.startsWith("Merchant_")) {
+                if (character.name !== "Bot_Gimli" && character.name !== "Bot_Legolas" && character.name !== "Bot_Gandalf" && character.name !== "Aragorn" && !isMerchantName(character.name)) {
                     character.locX += (Math.random() - 0.5) * 1600;
                     character.locY += (Math.random() - 0.5) * 1600;
                 }
@@ -171,7 +173,7 @@ const BotManager = {
                             }
                             utils.infoSuccess("BotManager", "PK Bot %s (Level %d) is hunting at %d, %d", character.name, character.level, densityCoord.locX, densityCoord.locY);
                         }, 8000);
-                    } else if (character.name.startsWith("Merchant_")) {
+                    } else if (isMerchantName(character.name)) {
                         session.plan = 'merchant';
                         session.actor.state.setSeated(true);
 
@@ -213,6 +215,22 @@ const BotManager = {
                 const ServerResponse = invoke('GameServer/Network/Response');
                 session.dataSendToOthers(ServerResponse.charInfo(session.actor), session.actor);
                 session.dataSendToOthers(ServerResponse.relationChanged(session.actor), session.actor);
+
+                // Send PrivateStoreMsg to announce the store (needed for store icon on client)
+                if (session.plan === 'merchant') {
+                    const storeType = session.actor.fetchPrivateStoreType();
+                    if (storeType === 2) {
+                        session.dataSendToOthers(
+                            ServerResponse.privateStoreBuyMsg(session.actor, session.actor.fetchTitle()),
+                            session.actor
+                        );
+                    } else {
+                        session.dataSendToOthers(
+                            ServerResponse.privateStoreMsg(session.actor, session.actor.fetchTitle()),
+                            session.actor
+                        );
+                    }
+                }
 
                 // Start AI loop
                 BotAI.init(session);
