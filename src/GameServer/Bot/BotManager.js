@@ -38,6 +38,23 @@ const BOT_COMBINATIONS = [
 const BotManager = {
     sessions: [],
 
+    findSessionByName(name) {
+        const lookup = String(name || '').toLowerCase();
+        return this.sessions.find((session) => session.actor && session.actor.fetchName().toLowerCase() === lookup);
+    },
+
+    getBotStatus(sessionOrName) {
+        const session = typeof sessionOrName === 'string' ? this.findSessionByName(sessionOrName) : sessionOrName;
+        if (!session) return null;
+        return BotAI.getStatus(session);
+    },
+
+    getAllBotStatuses() {
+        return this.sessions
+            .filter((session) => session.actor)
+            .map((session) => BotAI.getStatus(session));
+    },
+
     init() {
         console.info("BotManager :: Initializing automated SimPlayers...");
         
