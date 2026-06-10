@@ -79,7 +79,7 @@ module.exports = {
 
     "MerBuy_TI": {
         title: "Buyer - D Mats",
-        storeType: 2,
+        storeType: 3,
         locX: -84120, locY: 244760, locZ: -3730,
         items: [
             { selfId: 1864, price: 50,  count: 999999 },
@@ -93,7 +93,7 @@ module.exports = {
     },
     "MerBuy_Gludio": {
         title: "Buyer - D/C Mats",
-        storeType: 2,
+        storeType: 3,
         locX: -12480, locY: 122950, locZ: -3118,
         items: [
             { selfId: 1867, price: 75,  count: 999999 },
@@ -106,7 +106,7 @@ module.exports = {
     },
     "MerBuy_Dion": {
         title: "Buyer - C Mats",
-        storeType: 2,
+        storeType: 3,
         locX: 15860, locY: 143100, locZ: -2707,
         items: [
             { selfId: 1873, price: 300,  count: 999999 },
@@ -119,7 +119,7 @@ module.exports = {
     },
     "MerBuy_Giran": {
         title: "Buyer - C/B Mats",
-        storeType: 2,
+        storeType: 3,
         locX: 83510, locY: 148120, locZ: -3406,
         items: [
             { selfId: 1881, price: 900,  count: 999999 },
@@ -132,7 +132,7 @@ module.exports = {
     },
     "MerBuy_Oren": {
         title: "Buyer - B/A Mats",
-        storeType: 2,
+        storeType: 3,
         locX: 83150, locY: 53300, locZ: -1497,
         items: [
             { selfId: 1885, price: 1400, count: 999999 },

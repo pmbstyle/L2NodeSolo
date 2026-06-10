@@ -69,6 +69,13 @@ npm run NodeL2
 
 ---
 
+## 🧪 Debug Notes
+
+* C2 Buy store nameplate opcode probe: `0xAE` reacts/crashes with bad payload, but safe payload is `objectId + byte(0)`.
+* Spell-cancel overlay effect trick: inserting a `writeS(title)` after `CharInfo.privateStoreType` shifts client parsing into effect/status fields and renders the cancel-spell overlay above the character. Do **not** use this for store text; restore CharInfo structure afterward.
+
+---
+
 ## 📄 License
 L2NodeSolo is licensed under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).  
 Original L2Node framework credited to [naden](https://github.com/NodeL2/NodeL2).

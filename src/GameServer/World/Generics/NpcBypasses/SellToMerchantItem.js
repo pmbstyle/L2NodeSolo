@@ -101,7 +101,7 @@ module.exports = async function(session, parts) {
     }
 
     const store = bot.fetchPrivateStore();
-    if (!store || store.storeType !== 2 || !store.items.length) {
+    if (!store || store.storeType !== 3 || !store.items.length) {
         session.dataSendToMe(ServerResponse.speak(session.actor, { kind: 0, text: "This merchant is not buying anything." }));
         return;
     }

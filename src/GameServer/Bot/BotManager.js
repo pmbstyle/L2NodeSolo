@@ -216,20 +216,23 @@ const BotManager = {
                 session.dataSendToOthers(ServerResponse.charInfo(session.actor), session.actor);
                 session.dataSendToOthers(ServerResponse.relationChanged(session.actor), session.actor);
 
-                // Send PrivateStoreMsg to announce the store (needed for store icon on client)
+                // Send store nameplate packet after a short delay so client processes CharInfo first.
+                // Both Sell and Buy stores use opcode 0x8c in C2.
                 if (session.plan === 'merchant') {
                     const storeType = session.actor.fetchPrivateStoreType();
-                    if (storeType === 2) {
-                        session.dataSendToOthers(
-                            ServerResponse.privateStoreBuyMsg(session.actor, session.actor.fetchTitle()),
-                            session.actor
-                        );
-                    } else {
-                        session.dataSendToOthers(
-                            ServerResponse.privateStoreMsg(session.actor, session.actor.fetchTitle()),
-                            session.actor
-                        );
-                    }
+                    setTimeout(() => {
+                        if (storeType === 3) {
+                            session.dataSendToOthers(
+                                ServerResponse.privateStoreBuyMsg(session.actor, session.actor.fetchTitle()),
+                                session.actor
+                            );
+                        } else {
+                            session.dataSendToOthers(
+                                ServerResponse.privateStoreMsg(session.actor, session.actor.fetchTitle()),
+                                session.actor
+                            );
+                        }
+                    }, 500);
                 }
 
                 // Start AI loop

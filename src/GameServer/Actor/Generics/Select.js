@@ -23,19 +23,22 @@ function select(session, actor, data) {
         }
         // Second click on bot
         if (user.fetchPrivateStoreType && user.fetchPrivateStoreType() !== 0) {
+            utils.infoWarn('Select', 'Second click on bot "%s" with private store type %d. Plan: %s', user.fetchName(), user.fetchPrivateStoreType(), botSession.plan);
             session.viewedPrivateStoreSeller = user;
             if (user.fetchPrivateStoreType() === 1) {
                 const isMerchantBot = botSession.plan === 'merchant';
                 if (isMerchantBot) {
+                    utils.infoSuccess('Select', 'Routing bot "%s" to BuyMerchantItem HTML shop', user.fetchName());
                     const BuyMerchantItem = invoke('GameServer/World/Generics/NpcBypasses/BuyMerchantItem');
                     BuyMerchantItem(session, ["buy-merchant-item"]);
                 } else {
                     session.dataSendToMe(ServerResponse.privateStoreMsg(session.actor, user));
                     session.dataSendToMe(ServerResponse.privateStoreListSell(user, session.actor));
                 }
-            } else if (user.fetchPrivateStoreType() === 2) {
+            } else if (user.fetchPrivateStoreType() === 3) {
                 const isMerchantBot = botSession.plan === 'merchant';
                 if (isMerchantBot) {
+                    utils.infoSuccess('Select', 'Routing bot "%s" to SellToMerchantItem HTML shop', user.fetchName());
                     const SellToMerchantItem = invoke('GameServer/World/Generics/NpcBypasses/SellToMerchantItem');
                     SellToMerchantItem(session, ["sell-to-merchant-item"]);
                 } else {
@@ -74,7 +77,7 @@ function select(session, actor, data) {
                         if (user.fetchPrivateStoreType() === 1) {
                             session.dataSendToMe(ServerResponse.privateStoreMsg(session.actor, user));
                             session.dataSendToMe(ServerResponse.privateStoreListSell(user, session.actor));
-                        } else if (user.fetchPrivateStoreType() === 2) {
+                        } else if (user.fetchPrivateStoreType() === 3) {
                             session.dataSendToMe(ServerResponse.privateStoreListBuy(session.actor, user));
                         }
                         return;

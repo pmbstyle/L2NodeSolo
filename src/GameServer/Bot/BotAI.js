@@ -293,7 +293,7 @@ const BotAI = {
                     spawnTarget.locY += (Math.random() - 0.5) * 800;
                     spawnTarget.locZ = GeodataEngine.getHeight(spawnTarget.locX, spawnTarget.locY, spawnTarget.locZ);
                 } else {
-                    if (bot.fetchName().startsWith("Merchant_")) {
+                    if (bot.fetchName().startsWith("Merchant_") || bot.fetchName().startsWith("MerBuy_")) {
                         session.plan = 'merchant';
                         bot.state.setSeated(true);
                         spawnTarget = {
