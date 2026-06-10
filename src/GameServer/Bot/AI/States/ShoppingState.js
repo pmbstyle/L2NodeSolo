@@ -3,14 +3,15 @@ const ServerResponse = invoke('GameServer/Network/Response');
 
 module.exports = {
     tick(session, bot, Generics, BotAI) {
+        const closestTown = BotAI.getClosestTown(bot.fetchLocX(), bot.fetchLocY());
         const distToTown = new SpeckMath.Point3D(bot.fetchLocX(), bot.fetchLocY(), bot.fetchLocZ())
-            .distance(new SpeckMath.Point3D(-84318, 244579, -3730));
+            .distance(new SpeckMath.Point3D(closestTown.x, closestTown.y, closestTown.z));
         
         if (distToTown > 300) {
             // Keep moving to Town center if got diverted
             bot.moveTo({
                 from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
-                to: { locX: -84318, locY: 244579, locZ: -3730 }
+                to: { locX: closestTown.x, locY: closestTown.y, locZ: closestTown.z }
             });
             return;
         }
@@ -68,8 +69,16 @@ module.exports = {
                 BotAI.say(session, "All stocked up! Returning to the keltir fields.");
                 session.plan = 'hunting';
                 session.shoppingDoneAnnounced = false;
-                // Teleport close to newbie field to start hunting again
-                Generics.teleportTo(session, bot, { locX: -81174, locY: 246037, locZ: -3719 });
+                
+                // Teleport back to original hunting spot
+                if (session.preShopLocation) {
+                    Generics.teleportTo(session, bot, session.preShopLocation);
+                    session.preShopLocation = undefined;
+                } else if (session.initialSpawnCoord) {
+                    Generics.teleportTo(session, bot, session.initialSpawnCoord);
+                } else {
+                    Generics.teleportTo(session, bot, { locX: -81174, locY: 246037, locZ: -3719 });
+                }
             }, 9000);
         }
     }

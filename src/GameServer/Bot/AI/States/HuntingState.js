@@ -113,14 +113,15 @@ module.exports = {
             return;
         }
 
-        // 4. Shopping trigger
         if (Math.random() < 0.005) { // ~0.5% chance per tick (~10 minutes)
+            const closestTown = BotAI.getClosestTown(bot.fetchLocX(), bot.fetchLocY());
+            session.preShopLocation = { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() };
             session.plan = 'shopping';
             session.shopTimer = Date.now();
-            BotAI.say(session, "My bags are full of keltir skins! Walking back to Town to sell and restock.");
+            BotAI.say(session, `My bags are full of keltir skins! Walking back to ${closestTown.name} to sell and restock.`);
             bot.moveTo({
                 from: { locX: bot.fetchLocX(), locY: bot.fetchLocY(), locZ: bot.fetchLocZ() },
-                to: { locX: -84318, locY: 244579, locZ: -3730 } // Village center
+                to: { locX: closestTown.x, locY: closestTown.y, locZ: closestTown.z }
             });
             return;
         }
