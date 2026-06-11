@@ -1,5 +1,25 @@
 const World         = invoke('GameServer/World/World');
 const ReceivePacket = invoke('Packet/Receive');
+const ServerResponse = invoke('GameServer/Network/Response');
+const DataCache      = invoke('GameServer/DataCache');
+const Item           = invoke('GameServer/Item/Item');
+const TradeService   = invoke('GameServer/Bot/TradeService');
+
+function merchantPurchaseItems(store) {
+    const items = [];
+
+    store.items.forEach((storeItem) => {
+        DataCache.fetchItemFromSelfId(storeItem.selfId, (item) => {
+            items.push(new Item(storeItem.objectId, {
+                ...utils.crushOb(item),
+                amount: storeItem.count,
+                price: storeItem.price
+            }));
+        });
+    });
+
+    return items;
+}
 
 function purchase(session, buffer) {
     const packet = new ReceivePacket(buffer);
@@ -24,7 +44,29 @@ function purchase(session, buffer) {
     });
 }
 
-function consume(session, data) {
+async function consume(session, data) {
+    const trade = session.activeMerchantTrade;
+    const store = trade && trade.store;
+
+    if (store && store.storeType === 1) {
+        try {
+            for (const item of data.list) {
+                await TradeService.buyFromStore(session.actor, store, item.selfId, item.amount);
+            }
+
+            session.dataSendToMe(ServerResponse.userInfo(session.actor));
+            session.dataSendToMe(ServerResponse.itemsList(session.actor.backpack.fetchItems()));
+            session.dataSendToMe(ServerResponse.purchaseList(
+                merchantPurchaseItems(store),
+                session.actor.backpack.fetchTotalAdena()
+            ));
+        } catch (err) {
+            utils.infoWarn('Purchase', 'merchant purchase error: %s', err.message || err);
+            session.dataSendToMe(ServerResponse.actionFailed());
+        }
+        return;
+    }
+
     World.purchaseItems(session, data.list);
 }
 

@@ -31,6 +31,7 @@ module.exports = {
                 restart: require('./Restart'),
                  revive: require('./Revive'),
            shortcutInit: require('./ShortcutInit'),
+                sellList: require('./SellList'),
                 showMap: require('./ShowMap'),
             sitAndStand: require('./SitAndStand'),
        skillDurationBar: require('./SkillDurationBar'),
