@@ -24,6 +24,7 @@ module.exports = {
        removeShortcut: require('./RemoveShortcut'),
               restart: require('./Restart'),
          restartPoint: require('./RestartPoint'),
+                  sell: require('./Sell'),
            skillsList: require('./SkillsList'),
              skillUse: require('./SkillUse'),
          socialAction: require('./SocialAction'),

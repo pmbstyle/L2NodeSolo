@@ -3,6 +3,8 @@ const Item           = invoke('GameServer/Item/Item');
 const DataCache      = invoke('GameServer/DataCache');
 
 module.exports = function(session, parts) {
+    session.activeMerchantTrade = null;
+
     let list = [];
     let itemIds = [];
 

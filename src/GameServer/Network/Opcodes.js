@@ -23,6 +23,7 @@ const Opcodes = {
         table[0x12] = ClientRequest.dropItem;
         table[0x14] = ClientRequest.useItem;
         table[0x1b] = ClientRequest.socialAction;
+        table[0x1e] = ClientRequest.sell;
         table[0x1f] = ClientRequest.purchase;
         table[0x21] = ClientRequest.htmlLink;
         table[0x29] = ClientRequest.askForTeamUp;
