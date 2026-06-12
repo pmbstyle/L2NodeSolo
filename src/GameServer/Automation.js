@@ -79,15 +79,51 @@ class Automation extends SelectedModel {
     }
 
     ticksToMove(srcX, srcY, srcZ, dstX, dstY, dstZ, radius, speed) {
-        const distance = new SpeckMath.Point3D(srcX, srcY, srcZ).distance(new SpeckMath.Point3D(dstX, dstY, dstZ)) - radius;
-        const duration = 1 + ((this.ticksPerSecond * distance) / speed);
+        const stopRadius = Math.max(0, Number(radius) || 0);
+        const moveDistance = Math.max(0, new SpeckMath.Point3D(srcX, srcY, srcZ).distance(new SpeckMath.Point3D(dstX, dstY, dstZ)) - stopRadius);
+        const duration = 1 + ((this.ticksPerSecond * moveDistance) / speed);
         return (1000 / this.ticksPerSecond) * duration;
+    }
+
+    actionStopCoords(src, dst, radius) {
+        const srcCoords = {
+            locX: src.fetchLocX(),
+            locY: src.fetchLocY(),
+            locZ: src.fetchLocZ(),
+        };
+        const dstCoords = {
+            locX: dst.fetchLocX(),
+            locY: dst.fetchLocY(),
+            locZ: dst.fetchLocZ(),
+        };
+        const stopRadius = Math.max(0, Number(radius) || 0);
+
+        if (stopRadius <= 0) {
+            return dstCoords;
+        }
+
+        const dx = dstCoords.locX - srcCoords.locX;
+        const dy = dstCoords.locY - srcCoords.locY;
+        const dz = dstCoords.locZ - srcCoords.locZ;
+        const distance = Math.sqrt((dx ** 2) + (dy ** 2) + (dz ** 2));
+
+        if (distance <= stopRadius || distance === 0) {
+            return srcCoords;
+        }
+
+        const ratio = (distance - stopRadius) / distance;
+        return {
+            locX: Math.round(srcCoords.locX + dx * ratio),
+            locY: Math.round(srcCoords.locY + dy * ratio),
+            locZ: Math.round(srcCoords.locZ + dz * ratio),
+        };
     }
 
     scheduleAction(session, src, dst, radius, callback) {
         // Execute each time, or else creature is stuck
         this.setDestId(dst.fetchId());
         session.dataSendToMeAndOthers(ServerResponse.moveToPawn(src, dst, radius), src);
+        const stopCoords = this.actionStopCoords(src, dst, radius);
 
         // Calculate duration
         src.state.setTowards(radius === 0 ? 'melee' : 'remote');
@@ -105,9 +141,9 @@ class Automation extends SelectedModel {
             const startX = src.fetchLocX();
             const startY = src.fetchLocY();
             const startZ = src.fetchLocZ();
-            const endX = dst.fetchLocX();
-            const endY = dst.fetchLocY();
-            const endZ = dst.fetchLocZ();
+            const endX = stopCoords.locX;
+            const endY = stopCoords.locY;
+            const endZ = stopCoords.locZ;
 
             const dx = endX - startX;
             const dy = endY - startY;
@@ -139,11 +175,7 @@ class Automation extends SelectedModel {
             src.state.setTowards(false);
             this.clearDestId();
             if (session && (session.constructor.name === 'BotSession' || (session.accountId && session.accountId.startsWith('bot_')))) {
-                src.setLocXYZ({
-                    locX: dst.fetchLocX(),
-                    locY: dst.fetchLocY(),
-                    locZ: dst.fetchLocZ()
-                });
+                src.setLocXYZ(stopCoords);
                 if (session.moveTimer) {
                     clearInterval(session.moveTimer);
                     session.moveTimer = null;

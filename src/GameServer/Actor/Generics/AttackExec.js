@@ -1,8 +1,10 @@
 const World = invoke('GameServer/World/World');
 
 function attackExec(session, actor, data) {
+    const attackRange = Math.max(0, Number(data.range) || 0);
+
     World.fetchNpc(data.id).then((npc) => {
-        actor.automation.scheduleAction(session, actor, npc, 0, () => {
+        actor.automation.scheduleAction(session, actor, npc, attackRange, () => {
             if (npc.fetchAttackable() || data.ctrl) {
                 actor.attack.meleeHit(session, npc);
             }
@@ -12,7 +14,7 @@ function attackExec(session, actor, data) {
         });
     }).catch(() => {
         World.fetchUser(data.id).then((user) => {
-            actor.automation.scheduleAction(session, actor, user, 0, () => {
+            actor.automation.scheduleAction(session, actor, user, attackRange, () => {
                 if (data.ctrl) {
                     if (utils.isInPeaceZone(actor.fetchLocX(), actor.fetchLocY()) || utils.isInPeaceZone(user.fetchLocX(), user.fetchLocY())) {
                         const ServerResponse = invoke('GameServer/Network/Response');
