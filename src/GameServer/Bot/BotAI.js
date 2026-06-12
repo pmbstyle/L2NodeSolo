@@ -390,6 +390,8 @@ const BotAI = {
     executeCombat(session, bot, npc, Generics) {
         const botName = bot.fetchName();
         const classId = bot.fetchClassId();
+        const MAGE_ATTACK_RANGE = 600;
+        const ARCHER_ATTACK_RANGE = 700;
 
         const MAGE_CLASSES = [10, 11, 12, 13, 14, 15, 16, 17, 25, 26, 27, 28, 29, 30, 38, 39, 40, 41, 42, 43];
         const ARCHER_CLASSES = [8, 9, 22, 23, 35, 36];
@@ -407,7 +409,7 @@ const BotAI = {
                     hitTime: 1500,
                     reuse: 1000,
                     power: 12,
-                    distance: 600,
+                    distance: MAGE_ATTACK_RANGE,
                     passive: false
                 });
                 bot.skillset.skills.push(skill);
@@ -430,7 +432,7 @@ const BotAI = {
                     hitTime: 1200,
                     reuse: 1500,
                     power: 15,
-                    distance: 600,
+                    distance: ARCHER_ATTACK_RANGE,
                     passive: false
                 });
                 bot.skillset.skills.push(skill);
@@ -439,6 +441,8 @@ const BotAI = {
                 Generics.skillExec(session, bot, { id: npc.fetchId(), selfId: 56, ctrl: true });
                 return;
             }
+            Generics.attackExec(session, bot, { id: npc.fetchId(), ctrl: true, range: ARCHER_ATTACK_RANGE });
+            return;
         }
         else {
             // Melee Fighter: Cast Power Strike with 40% probability if MP allows
