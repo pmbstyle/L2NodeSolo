@@ -4,6 +4,7 @@
     "description": "L2 Chronicle 2 server emulator in NodeJS",
     "author": "Dennis Koluris",
     "scripts": {
+        "start": "node scripts/start.js",
         "NodeL2": "node --openssl-legacy-provider src/NodeL2"
     },
     "dependencies": {
